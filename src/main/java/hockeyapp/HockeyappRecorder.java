@@ -110,6 +110,7 @@ public class HockeyappRecorder extends Recorder {
 		this.buildNotes = buildNotes;
 		this.filePath = filePath;
 		this.dsymPath = dsymPath;
+		this.tags = tags;
 		this.downloadAllowed = downloadAllowed;
 		this.useChangelog = useChangelog;
 		this.cleanupOld = cleanupOld;
