@@ -182,7 +182,7 @@ public class HockeyappRecorder extends Recorder {
 			}
 
 			if (tags != null && tags.length() > 0)
-				entity.addPart("tags", new StringBody(tags));
+				entity.addPart("tags", new StringBody(vars.expand(tags)));
 			entity.addPart("notify", new StringBody(notifyTeam ? "1" : "0"));
 			entity.addPart("status",
 					new StringBody(downloadAllowed ? "2" : "1"));
