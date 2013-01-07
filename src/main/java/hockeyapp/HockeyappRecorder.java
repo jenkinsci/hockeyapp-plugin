@@ -99,11 +99,17 @@ public class HockeyappRecorder extends Recorder {
 		return this.numberOldVersions;
 	}
 
-	@DataBoundConstructor
+    private Boolean useAppVersionURL;
+
+    public Boolean getUseAppVersionURL() {
+        return useAppVersionURL;
+    }
+
+    @DataBoundConstructor
 	public HockeyappRecorder(String apiToken, String appId, Boolean notifyTeam,
 			String buildNotes, String filePath, String dsymPath, String tags,
 			Boolean downloadAllowed, Boolean useChangelog, Boolean cleanupOld,
-			String numberOldVersions) {
+			String numberOldVersions,Boolean useAppVersionURL) {
 		this.apiToken = apiToken;
 		this.appId = appId;
 		this.notifyTeam = notifyTeam;
@@ -115,6 +121,7 @@ public class HockeyappRecorder extends Recorder {
 		this.useChangelog = useChangelog;
 		this.cleanupOld = cleanupOld;
 		this.numberOldVersions = numberOldVersions;
+        this.useAppVersionURL = useAppVersionURL;
 	}
 
 	@Override
@@ -147,8 +154,19 @@ public class HockeyappRecorder extends Recorder {
 			listener.getLogger().println(file);
 
 			HttpClient httpclient = new DefaultHttpClient();
-			HttpPost httpPost = new HttpPost(
-					"https://rink.hockeyapp.net/api/2/apps/upload");
+            HttpPost httpPost;
+            if(useAppVersionURL) {
+                if( StringUtils.isBlank(appId)) {
+                    listener.getLogger().println("appID is blank, can not build AppVersion upload URL. Set appID or disable useAppVersionURL.");
+                    return false;
+                }
+                httpPost = new HttpPost(
+                        "https://rink.hockeyapp.net/api/2/apps/" + appId +"/app_versions");
+            } else {
+                httpPost = new HttpPost(
+                        "https://rink.hockeyapp.net/api/2/apps/upload");
+
+            }
 			FileBody fileBody = new FileBody(file);
 			httpPost.setHeader("X-HockeyAppToken", apiToken);
 			MultipartEntity entity = new MultipartEntity();

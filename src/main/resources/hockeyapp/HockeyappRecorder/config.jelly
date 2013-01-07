@@ -44,5 +44,8 @@
     <f:entry title="Numbers of old versions to keep" field="numberOldVersions">
         <f:textbox />
     </f:entry>
+    <f:entry title="Use upload new version URL" field="useAppVersionURL">
+        <f:checkbox />
+    </f:entry>
   </f:advanced>
 </j:jelly>
