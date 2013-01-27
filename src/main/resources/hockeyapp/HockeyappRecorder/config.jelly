@@ -16,10 +16,10 @@
     <f:textbox />
   </f:entry>
 
-  <f:entry title="IPA File" field="filePath">
+  <f:entry title="App File (.ipa, .app.zip, .apk)" field="filePath">
     <f:textbox />
   </f:entry>
-  <f:entry title="dSYM File" field="dsymPath">
+  <f:entry title="dSYM File (.dSYM.zip or mapping.txt)" field="dsymPath">
     <f:textbox />
   </f:entry>
   <f:entry title="Build Notes" field="buildNotes">

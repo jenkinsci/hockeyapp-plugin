@@ -2,5 +2,6 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin will upload a .ipa and .dsym file to hockeyapp.net for distribution.
+  This plugin allows you to upload new versions of your iOS (.ipa),
+  MacOS (.app), and Android (.apk) applictions to hockeyapp.net.
 </div>
