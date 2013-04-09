@@ -1,50 +1,41 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <!--
-    This jelly script is used for per-project configuration.
 
-    See global.jelly for a general discussion about jelly script.
-  -->
-
-  <!--
-    Creates a text field that shows the value of the "name" property.
-    When submitted, it will be passed to the corresponding constructor parameter.
-  -->
-  <f:entry title="HockeyAppToken" field="apiToken">
+  <f:entry title="${%API Token}" field="apiToken">
     <f:textbox />
   </f:entry>
-  <f:entry title="Public ID / App ID" field="appId">
+  <f:entry title="${%Public ID / App ID}" field="appId">
     <f:textbox />
   </f:entry>
 
-  <f:entry title="App File (.ipa, .app.zip, .apk)" field="filePath">
+  <f:entry title="${%App file} (${%.ipa, .app.zip, .apk})" field="filePath">
     <f:textbox />
   </f:entry>
-  <f:entry title="dSYM File (.dSYM.zip or mapping.txt)" field="dsymPath">
+  <f:entry title="${%Symbols} (${%.dSYM.zip or mapping.txt})" field="dsymPath">
     <f:textbox />
   </f:entry>
-  <f:entry title="Build Notes" field="buildNotes">
+  <f:entry title="${%Release notes}" field="buildNotes">
     <f:textarea />
   </f:entry>
   <f:advanced>
-    <f:entry title="Restrict downloads to tags" field="tags">
-        <f:textbox />
-    </f:entry>
-    <f:entry title="Notify Team" field="notifyTeam">
+    <f:entry title="${%Use changelog as release notes}" field="useChangelog">
         <f:checkbox />
     </f:entry>
-    <f:entry title="Download allowed" field="downloadAllowed">
+    <f:entry title="${%Allow downloads}" field="downloadAllowed">
         <f:checkbox />
     </f:entry>
-    <f:entry title="Use changelog as build notes" field="useChangelog">
-    	<f:checkbox />
-    </f:entry>
-    <f:entry title="Cleanup old versions at hockeyapp" field="cleanupOld">
-    	<f:checkbox />
-    </f:entry>
-    <f:entry title="Numbers of old versions to keep" field="numberOldVersions">
+    <f:entry title="${%Restrict downloads to tags}" field="tags">
         <f:textbox />
     </f:entry>
-    <f:entry title="Use upload new version URL" field="useAppVersionURL">
+    <f:entry title="${%Notify team}" field="notifyTeam">
+        <f:checkbox />
+    </f:entry>
+    <f:entry title="${%Clean up old versions at HockeyApp}" field="cleanupOld">
+    	<f:checkbox />
+    </f:entry>
+    <f:entry title="${%Number of old versions to keep}" field="numberOldVersions">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%Use new API URL}" field="useAppVersionURL">
         <f:checkbox />
     </f:entry>
   </f:advanced>

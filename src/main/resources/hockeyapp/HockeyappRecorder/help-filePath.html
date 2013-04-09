@@ -1,4 +1,6 @@
 <div>
-The path to the generated ipa (iOS), .app.zip (MacOS), or .apk (Android) file.
-eg. "MyApp/build/Beta-iphoneos/MyApp-Beta-${BUILD_NUMBER}.ipa if your use ${BUILD_NUMBER} as technical version number (CFBundleShortVersionString).
+The path, relative to the build's workspace, to the generated .ipa (iOS), .app.zip (MacOS), or .apk (Android) file.<br/>
+You can include build variables here like <code>${BUILD_NUMBER}</code> and they'll be expanded at build time.
+<p/>
+e.g. "MyApp/build/Beta-iphoneos/MyApp-Beta-${BUILD_NUMBER}.ipa if your use ${BUILD_NUMBER} as technical version number (CFBundleShortVersionString).
 </div>

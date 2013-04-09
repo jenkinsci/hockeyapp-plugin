@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.*;
 import hudson.model.AbstractBuild;
 import hudson.tasks.*;
@@ -31,96 +32,41 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.export.Exported;
+
+
 
 public class HockeyappRecorder extends Recorder {
-	private String apiToken;
 
-	public String getApiToken() {
-		return this.apiToken;
-	}
-
-	private String appId;
-
-	public String getAppId() {
-		return this.appId;
-	}
-
-	private Boolean notifyTeam;
-
-	public Boolean getNotifyTeam() {
-		return this.notifyTeam;
-	}
-
-	private String buildNotes;
-
-	public String getBuildNotes() {
-		return this.buildNotes;
-	}
-
-	private String filePath;
-
-	public String getFilePath() {
-		return this.filePath;
-	}
-
-	private String dsymPath;
-
-	public String getDsymPath() {
-		return this.dsymPath;
-	}
-
-	private String tags;
-
-	public String getTags() {
-		return this.tags;
-	}
-
-	private Boolean downloadAllowed;
-
-	public Boolean getDownloadAllowed() {
-		return this.downloadAllowed;
-	}
-
-	private Boolean useChangelog;
-
-	public Boolean getUseChangelog() {
-		return this.useChangelog;
-	}
-
-	private Boolean cleanupOld;
-
-	public Boolean getCleanupOld() {
-		return this.cleanupOld;
-	}
-
-	private String numberOldVersions;
-
-	public String getNumberOldVersions() {
-		return this.numberOldVersions;
-	}
-
-    private Boolean useAppVersionURL;
-
-    public Boolean getUseAppVersionURL() {
-        return useAppVersionURL;
-    }
+	@Exported public String apiToken;
+	@Exported public String appId;
+	@Exported public boolean notifyTeam;
+	@Exported public String buildNotes;
+	@Exported public String filePath;
+	@Exported public String dsymPath;
+	@Exported public String tags;
+	@Exported public boolean downloadAllowed;
+	@Exported public boolean useChangelog;
+	@Exported public boolean cleanupOld;
+	@Exported public String numberOldVersions;
+	@Exported public boolean useAppVersionURL;
 
     @DataBoundConstructor
-	public HockeyappRecorder(String apiToken, String appId, Boolean notifyTeam,
+	public HockeyappRecorder(String apiToken, String appId, boolean notifyTeam,
 			String buildNotes, String filePath, String dsymPath, String tags,
-			Boolean downloadAllowed, Boolean useChangelog, Boolean cleanupOld,
-			String numberOldVersions,Boolean useAppVersionURL) {
-		this.apiToken = apiToken;
-		this.appId = appId;
+			boolean downloadAllowed, boolean useChangelog, boolean cleanupOld,
+			String numberOldVersions, boolean useAppVersionURL) {
+		this.apiToken = Util.fixEmptyAndTrim(apiToken);
+		this.appId = Util.fixEmptyAndTrim(appId);
 		this.notifyTeam = notifyTeam;
-		this.buildNotes = buildNotes;
-		this.filePath = filePath;
-		this.dsymPath = dsymPath;
-		this.tags = tags;
+		this.buildNotes = Util.fixEmptyAndTrim(buildNotes);
+		this.filePath = Util.fixEmptyAndTrim(filePath);
+		this.dsymPath = Util.fixEmptyAndTrim(dsymPath);
+		this.tags = Util.fixEmptyAndTrim(tags);
 		this.downloadAllowed = downloadAllowed;
 		this.useChangelog = useChangelog;
 		this.cleanupOld = cleanupOld;
-		this.numberOldVersions = numberOldVersions;
+		this.numberOldVersions = Util.fixEmptyAndTrim(numberOldVersions);
         this.useAppVersionURL = useAppVersionURL;
 	}
 
@@ -139,7 +85,7 @@ public class HockeyappRecorder extends Recorder {
 		if (build.getResult().isWorseOrEqualTo(Result.FAILURE))
 			return false;
 
-		listener.getLogger().println("Uploading to hockeyapp");
+		listener.getLogger().println(Messages.UPLOADING_TO_HOCKEYAPP());
 		File tempDir = null;
 		try {
 			EnvVars vars = build.getEnvironment(listener);
@@ -156,8 +102,8 @@ public class HockeyappRecorder extends Recorder {
 			HttpClient httpclient = new DefaultHttpClient();
             HttpPost httpPost;
             if(useAppVersionURL) {
-                if( StringUtils.isBlank(appId)) {
-                    listener.getLogger().println("appID is blank, can not build AppVersion upload URL. Set appID or disable useAppVersionURL.");
+                if (appId == null) {
+                    listener.getLogger().println(Messages.APP_ID_MISSING());
                     return false;
                 }
                 httpPost = new HttpPost(
@@ -170,9 +116,7 @@ public class HockeyappRecorder extends Recorder {
 			FileBody fileBody = new FileBody(file);
 			httpPost.setHeader("X-HockeyAppToken", apiToken);
 			MultipartEntity entity = new MultipartEntity();
-			if (!useChangelog) {
-			entity.addPart("notes", new StringBody(vars.expand(buildNotes)));
-			} else {
+			if (useChangelog) {
 			//StringBuilder sb = new StringBuilder(super.buildCompletionMessage(publisher,build,listener));
 			StringBuilder sb = new StringBuilder();
 			 if (!build.getChangeSet().isEmptySet()) {
@@ -186,12 +130,14 @@ public class HockeyappRecorder extends Recorder {
 		            }
 		        }
 			 entity.addPart("notes", new StringBody(sb.toString()));
+			} else if (buildNotes != null) {
+			    entity.addPart("notes", new StringBody(vars.expand(buildNotes)));
 			}
 			entity.addPart("notes_type", new StringBody("0"));
 
 			entity.addPart("ipa", fileBody);
 
-			if (!StringUtils.isEmpty(dsymPath)) {
+			if (dsymPath != null) {
 				File dsymFile = getFileLocally(build.getWorkspace(),
 						vars.expand(dsymPath), tempDir);
 				listener.getLogger().println(dsymFile);
@@ -215,8 +161,7 @@ public class HockeyappRecorder extends Recorder {
 				String responseBody = new Scanner(is).useDelimiter("\\A")
 						.next();
 				listener.getLogger().println(
-						"Incorrect response code: "
-								+ response.getStatusLine().getStatusCode());
+						Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
 				listener.getLogger().println(responseBody);
 				return false;
 			}
@@ -227,33 +172,35 @@ public class HockeyappRecorder extends Recorder {
 					new InputStreamReader(is)));
 
 			HockeyappBuildAction installAction = new HockeyappBuildAction();
-			installAction.displayName = "Hockeyapp Install Link";
+			installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
 			installAction.iconFileName = "package.gif";
 			installAction.urlName = (String) parsedMap.get("public_url");
 			build.addAction(installAction);
 
 			HockeyappBuildAction configureAction = new HockeyappBuildAction();
-			configureAction.displayName = "Hockeyapp Configuration Link";
+			configureAction.displayName = Messages.HOCKEYAPP_CONFIG_LINK();
 			configureAction.iconFileName = "gear2.gif";
 			configureAction.urlName = (String) parsedMap.get("config_url");
 			build.addAction(configureAction);
 
 			if (cleanupOld) {
-				if (StringUtils.isBlank(appId)) {
-					listener.getLogger().println(
-							"No Public ID / App ID specified!");
-					listener.getLogger().println("Aborting cleanup");
+				if (appId == null) {
+					listener.getLogger().println(Messages.APP_ID_MISSING_FOR_CLEANUP());
+					listener.getLogger().println(Messages.ABORTING_CLEANUP());
 					return false;
 				}
-				if (StringUtils.isBlank(numberOldVersions)) {
-					listener.getLogger().println(
-							"No number of old versions to keep specified!");
-					listener.getLogger().println("Aborting cleanup");
+				if (numberOldVersions == null || !StringUtils.isNumeric(numberOldVersions)) {
+					listener.getLogger().println(Messages.COUNT_MISSING_FOR_CLEANUP());
+					listener.getLogger().println(Messages.ABORTING_CLEANUP());
+					return false;
+				}
+				if (Integer.parseInt(numberOldVersions) < 1) {
+					listener.getLogger().println(Messages.TOO_FEW_VERSIONS_RETAINED());
+					listener.getLogger().println(Messages.ABORTING_CLEANUP());
 					return false;
 				}
 				cleanupOldVersions(listener);
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace(listener.getLogger());
 			return false;
@@ -272,8 +219,15 @@ public class HockeyappRecorder extends Recorder {
 		return true;
 	}
 
-	private File getFileLocally(FilePath workingDir, String strFile,
+	private static File getFileLocally(FilePath workingDir, String strFile,
 			File tempDir) throws IOException, InterruptedException {
+		// Due to the previous inconsistency about whether or not to use absolute paths,
+		// here we automatically remove the workspace, so that 'strFile' is relative
+		// and existing jobs continue to function, regardless of how they were configured
+		if (strFile.startsWith(workingDir.getRemote())) {
+			strFile = strFile.substring(workingDir.getRemote().length() + 1);
+		}
+
 		if (workingDir.isRemote()) {
 			FilePath remoteFile = new FilePath(workingDir, strFile);
 			File file = new File(tempDir, remoteFile.getName());
@@ -282,9 +236,9 @@ public class HockeyappRecorder extends Recorder {
 			remoteFile.copyTo(fos);
 			fos.close();
 			return file;
-		} else {
-			return new File(strFile);
 		}
+
+		return new File(workingDir.getRemote(), strFile);
 	}
 
 	@Override
@@ -320,55 +274,43 @@ public class HockeyappRecorder extends Recorder {
 	}
 
 	private boolean cleanupOldVersions(BuildListener listener) {
-		if (StringUtils.isNumeric(numberOldVersions)) {
-			if (Integer.parseInt(numberOldVersions) < 1) {
-				listener.getLogger().println("You need to keep min 1 Version!");
-				listener.getLogger().println("Aborting cleanup");
-			}
-			try {
-				HttpClient httpclient = new DefaultHttpClient();
-				HttpPost httpPost = new HttpPost(
-						"https://rink.hockeyapp.net/api/2/apps/" + appId
-								+ "/app_versions/delete");
-				httpPost.setHeader("X-HockeyAppToken", apiToken);
-				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(
-						1);
-				nameValuePairs.add(new BasicNameValuePair("keep",
-						numberOldVersions));
-				httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-				HttpResponse response = httpclient.execute(httpPost);
-				HttpEntity resEntity = response.getEntity();
-				if (resEntity != null) {
-					InputStream is = resEntity.getContent();
+		try {
+			HttpClient httpclient = new DefaultHttpClient();
+			HttpPost httpPost = new HttpPost(
+			        "https://rink.hockeyapp.net/api/2/apps/" + appId
+						+ "/app_versions/delete");
+			httpPost.setHeader("X-HockeyAppToken", apiToken);
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+			nameValuePairs.add(new BasicNameValuePair("keep", numberOldVersions));
+			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			HttpResponse response = httpclient.execute(httpPost);
+			HttpEntity resEntity = response.getEntity();
+			if (resEntity != null) {
+				InputStream is = resEntity.getContent();
 
-					// Improved error handling.
-					if (response.getStatusLine().getStatusCode() != 200) {
-						String responseBody = new Scanner(is).useDelimiter(
-								"\\A").next();
-						listener.getLogger().println(
-								"Incorrect response code: "
-										+ response.getStatusLine()
-												.getStatusCode());
-						listener.getLogger().println(responseBody);
-						return false;
-					}
-
-					JSONParser parser = new JSONParser();
-
-					final Map parsedMap = (Map) parser
-							.parse(new BufferedReader(new InputStreamReader(is)));
+				// Improved error handling.
+				if (response.getStatusLine().getStatusCode() != 200) {
+					String responseBody = new Scanner(is).useDelimiter(
+						"\\A").next();
 					listener.getLogger().println(
-							"Deleted Versions: "
-									+ String.valueOf(parsedMap
-											.get("total_entries")));
+					        Messages.UNEXPECTED_RESPONSE_CODE(
+					                response.getStatusLine().getStatusCode()));
+					listener.getLogger().println(responseBody);
+					return false;
 				}
-			} catch (Exception e) {
-				e.printStackTrace(listener.getLogger());
-				return false;
+
+				JSONParser parser = new JSONParser();
+				final Map parsedMap = (Map) parser.parse(
+				        new BufferedReader(new InputStreamReader(is)));
+				listener.getLogger().println(
+					Messages.DELETED_OLD_VERSIONS(String.valueOf(
+					        parsedMap.get("total_entries"))));
 			}
-			return true;
+		} catch (Exception e) {
+			e.printStackTrace(listener.getLogger());
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	@Extension
@@ -400,7 +342,7 @@ public class HockeyappRecorder extends Recorder {
 		 * This human readable name is used in the configuration screen.
 		 */
 		public String getDisplayName() {
-			return "Upload to Hockeyapp";
+		    return Messages.UPLOAD_TO_HOCKEYAPP();
 		}
 	}
 }

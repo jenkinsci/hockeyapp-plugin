@@ -1,5 +1,6 @@
 <div>
-The path to the generated dSYM.zip (iOS and MacOS) or mapping.txt (Android) file.
-eg. "MyApp/build/Beta-iphoneos/MyApp-Beta-${BUILD_NUMBER}.dsym.zip if your use ${BUILD_NUMBER} as technical version number (CFBundleShortVersionString).
-<a href="https://github.com/ohoeltke/hockeyapp-plugin/issues/1">Currently hockeyapp does not like the zip files generated from xcode-plugin.</a>
+An optional path, relative to the build's workspace, to the generated dSYM.zip (iOS and MacOS) or mapping.txt (Android) file.<br/>
+You can include build variables here like <code>${BUILD_NUMBER}</code> and they'll be expanded at build time.<br/>
+<p/>
+e.g. "MyApp/build/Beta-iphoneos/MyApp-Beta-${BUILD_NUMBER}.dsym.zip if your use ${BUILD_NUMBER} as technical version number (CFBundleShortVersionString).
 </div>

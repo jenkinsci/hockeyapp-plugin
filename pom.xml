@@ -3,13 +3,12 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.399</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>1.424</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
-  <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>hockeyapp</artifactId>
-  <name>Hockeyapp Plugin</name>
-  <description>Uploads .ipa and .dsym files to www.hockeyapp.net</description>
+  <name>HockeyApp Plugin</name>
+  <description>Uploads iOS, Mac or Android apps to hockeyapp.net</description>
   <version>1.0.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
