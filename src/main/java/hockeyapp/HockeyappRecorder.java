@@ -107,14 +107,14 @@ public class HockeyappRecorder extends Recorder {
                     return false;
                 }
                 httpPost = new HttpPost(
-                        "https://rink.hockeyapp.net/api/2/apps/" + appId +"/app_versions");
+                        "https://rink.hockeyapp.net/api/2/apps/" + vars.expand(appId) +"/app_versions");
             } else {
                 httpPost = new HttpPost(
                         "https://rink.hockeyapp.net/api/2/apps/upload");
 
             }
 			FileBody fileBody = new FileBody(file);
-			httpPost.setHeader("X-HockeyAppToken", apiToken);
+			httpPost.setHeader("X-HockeyAppToken", vars.expand(apiToken));
 			MultipartEntity entity = new MultipartEntity();
 			if (useChangelog) {
 			//StringBuilder sb = new StringBuilder(super.buildCompletionMessage(publisher,build,listener));
