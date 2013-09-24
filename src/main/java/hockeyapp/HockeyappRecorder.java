@@ -199,7 +199,7 @@ public class HockeyappRecorder extends Recorder {
 					listener.getLogger().println(Messages.ABORTING_CLEANUP());
 					return false;
 				}
-				cleanupOldVersions(listener);
+				cleanupOldVersions(listener, vars);
 			}
 		} catch (Exception e) {
 			e.printStackTrace(listener.getLogger());
@@ -273,13 +273,13 @@ public class HockeyappRecorder extends Recorder {
 		return actions;
 	}
 
-	private boolean cleanupOldVersions(BuildListener listener) {
+	private boolean cleanupOldVersions(BuildListener listener, EnvVars vars) {
 		try {
 			HttpClient httpclient = new DefaultHttpClient();
 			HttpPost httpPost = new HttpPost(
-			        "https://rink.hockeyapp.net/api/2/apps/" + appId
+			        "https://rink.hockeyapp.net/api/2/apps/" + vars.expand(appId)
 						+ "/app_versions/delete");
-			httpPost.setHeader("X-HockeyAppToken", apiToken);
+			httpPost.setHeader("X-HockeyAppToken", vars.expand(apiToken));
 			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
 			nameValuePairs.add(new BasicNameValuePair("keep", numberOldVersions));
 			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
