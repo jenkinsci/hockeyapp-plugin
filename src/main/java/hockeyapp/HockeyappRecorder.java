@@ -120,6 +120,8 @@ public class HockeyappRecorder extends Recorder {
 			File file = new File(fileSet.iterator().next().toString());
 			listener.getLogger().println(file);
 
+			float fileSize = file.length();
+
 			HttpClient httpclient = new DefaultHttpClient();
             HttpPost httpPost;
             if(useAppVersionURL) {
@@ -181,7 +183,13 @@ public class HockeyappRecorder extends Recorder {
 			entity.addPart("status",
 					new StringBody(downloadAllowed ? "2" : "1"));
 			httpPost.setEntity(entity);
+
+			long startTime = System.currentTimeMillis();
 			HttpResponse response = httpclient.execute(httpPost);
+			long duration = System.currentTimeMillis() - startTime;
+
+			printUploadSpeed(duration, fileSize,listener);
+
 			HttpEntity resEntity = response.getEntity();
 
 			InputStream is = resEntity.getContent();
@@ -251,6 +259,21 @@ public class HockeyappRecorder extends Recorder {
 
 		return true;
 	}
+
+	private void printUploadSpeed(long duration, float fileSize, BuildListener listener) {
+		Float speed = fileSize/duration;
+
+		if (Float.isNaN(speed)) listener.getLogger().println("NaN bps");
+
+		String[] units = {"bps", "Kbps", "Mbps", "Gbps"};
+		int idx = 0;
+		while (speed > 1024 && idx <= units.length - 1) {
+			speed /= 1024;
+			idx += 1;
+		}
+		listener.getLogger().println(String.format("%.2f", speed) + units[idx]);
+	}
+
 
 	private static File getFileLocally(FilePath workingDir, String strFile,
 			File tempDir) throws IOException, InterruptedException {
@@ -361,7 +384,7 @@ public class HockeyappRecorder extends Recorder {
 		public String getDefaultToken() {
 			return defaultToken;
 		}
-		
+
 		@SuppressWarnings("unused") // Used by Jenkins
 		public void setDefaultToken(String defaultToken) {
 			this.defaultToken = defaultToken;
