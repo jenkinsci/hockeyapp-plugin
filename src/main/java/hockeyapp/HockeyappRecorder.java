@@ -194,6 +194,9 @@ public class HockeyappRecorder extends Recorder {
 						Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
 				listener.getLogger().println(responseBody);
 				return false;
+			} else if(getDescriptor().getDebugMode()) { // DEBUG MODE output
+				String responseBody = new Scanner(is).useDelimiter("\\A").next();
+				listener.getLogger().println("RESPONSE: " + responseBody);
 			}
 
 			JSONParser parser = new JSONParser();
@@ -358,13 +361,28 @@ public class HockeyappRecorder extends Recorder {
 		public String getDefaultToken() {
 			return defaultToken;
 		}
-
+		
+		@SuppressWarnings("unused") // Used by Jenkins
 		public void setDefaultToken(String defaultToken) {
 			this.defaultToken = defaultToken;
 			save();
 		}
 
+		public Boolean getDebugMode() {
+			if(this.debugMode == null) {
+				return false;
+			}
+			return this.debugMode;
+		}
+
+		@SuppressWarnings("unused") // Used by Jenkins
+		public void setDebugMode(Boolean debugMode) {
+			this.debugMode = debugMode;
+			save();
+		}
+
 		private String defaultToken;
+		private Boolean debugMode;
 
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
 			// Indicates that this builder can be used with all kinds of project
