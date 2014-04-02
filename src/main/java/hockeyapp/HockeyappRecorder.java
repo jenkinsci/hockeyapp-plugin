@@ -204,23 +204,20 @@ public class HockeyappRecorder extends Recorder {
 
 			InputStream is = resEntity.getContent();
 
+			String responseBody = IOUtils.toString(is);
 			// Improved error handling.
 			if (response.getStatusLine().getStatusCode() != 201) {
-				String responseBody = new Scanner(is).useDelimiter("\\A")
-						.next();
 				listener.getLogger().println(
 						Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
 				listener.getLogger().println(responseBody);
 				return false;
 			} else if(isDebugEnabled()) { // DEBUG MODE output
-				String responseBody = IOUtils.toString(is);
 				listener.getLogger().println("RESPONSE: " + responseBody);
 			}
 
 			JSONParser parser = new JSONParser();
 
-			final Map parsedMap = (Map) parser.parse(new BufferedReader(
-					new InputStreamReader(is)));
+			final Map parsedMap = (Map) parser.parse(responseBody);
 
 			HockeyappBuildAction installAction = new HockeyappBuildAction();
 			installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
