@@ -250,7 +250,7 @@ public class HockeyappRecorder extends Recorder {
 					listener.getLogger().println(Messages.ABORTING_CLEANUP());
 					return false;
 				}
-				cleanupOldVersions(listener, vars);
+				cleanupOldVersions(listener, vars,appId);
 			}
 		} catch (Exception e) {
 			e.printStackTrace(listener.getLogger());
@@ -326,7 +326,7 @@ public class HockeyappRecorder extends Recorder {
 		return actions;
 	}
 
-	private boolean cleanupOldVersions(BuildListener listener, EnvVars vars) {
+	private boolean cleanupOldVersions(BuildListener listener, EnvVars vars, String appId) {
 		try {
 			HttpClient httpclient = createPreconfiguredHttpClient();
 			HttpPost httpPost = new HttpPost(
