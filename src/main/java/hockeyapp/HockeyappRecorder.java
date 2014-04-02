@@ -131,7 +131,9 @@ public class HockeyappRecorder extends Recorder {
 			File file = new File(fileSet.iterator().next().toString());
 			listener.getLogger().println(file);
 
+			float fileSize = file.length();
 			HttpClient httpclient = createPreconfiguredHttpClient();
+
             HttpPost httpPost;
             if(useAppVersionURL) {
                 if (appId == null) {
@@ -192,7 +194,13 @@ public class HockeyappRecorder extends Recorder {
 			entity.addPart("status",
 					new StringBody(downloadAllowed ? "2" : "1"));
 			httpPost.setEntity(entity);
+
+			long startTime = System.currentTimeMillis();
 			HttpResponse response = httpclient.execute(httpPost);
+			long duration = System.currentTimeMillis() - startTime;
+
+			printUploadSpeed(duration, fileSize,listener);
+
 			HttpEntity resEntity = response.getEntity();
 
 			InputStream is = resEntity.getContent();
@@ -205,6 +213,9 @@ public class HockeyappRecorder extends Recorder {
 						Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
 				listener.getLogger().println(responseBody);
 				return false;
+			} else if(getDescriptor().getDebugMode()) { // DEBUG MODE output
+				String responseBody = new Scanner(is).useDelimiter("\\A").next();
+				listener.getLogger().println("RESPONSE: " + responseBody);
 			}
 
 			JSONParser parser = new JSONParser();
@@ -259,6 +270,22 @@ public class HockeyappRecorder extends Recorder {
 
 		return true;
 	}
+
+	private void printUploadSpeed(long duration, float fileSize, BuildListener listener) {
+		Float speed = fileSize/duration;
+		speed *= 8000; // In order to get bits pers second not bytes per miliseconds
+
+		if (Float.isNaN(speed)) listener.getLogger().println("NaN bps");
+
+		String[] units = {"bps", "Kbps", "Mbps", "Gbps"};
+		int idx = 0;
+		while (speed > 1024 && idx <= units.length - 1) {
+			speed /= 1024;
+			idx += 1;
+		}
+		listener.getLogger().println("HockeyApp Upload Speed: " + String.format("%.2f", speed) + units[idx]);
+	}
+
 
 	private static File getFileLocally(FilePath workingDir, String strFile,
 			File tempDir) throws IOException, InterruptedException {
@@ -370,12 +397,27 @@ public class HockeyappRecorder extends Recorder {
 			return defaultToken;
 		}
 
+		@SuppressWarnings("unused") // Used by Jenkins
 		public void setDefaultToken(String defaultToken) {
 			this.defaultToken = defaultToken;
 			save();
 		}
 
+		public Boolean getDebugMode() {
+			if(this.debugMode == null) {
+				return false;
+			}
+			return this.debugMode;
+		}
+
+		@SuppressWarnings("unused") // Used by Jenkins
+		public void setDebugMode(Boolean debugMode) {
+			this.debugMode = debugMode;
+			save();
+		}
+
 		private String defaultToken;
+		private Boolean debugMode;
 
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
 			// Indicates that this builder can be used with all kinds of project
