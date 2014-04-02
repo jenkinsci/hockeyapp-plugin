@@ -3,7 +3,7 @@
          <f:entry title="${%Default API Token}" field="defaultToken">
              <f:textbox/>
          </f:entry>
-         <f:entry title="${%Enable DEBUG mode}" field="debugMode">
+         <f:entry title="${%Enable global DEBUG mode}" field="globalDebugMode">
              <f:checkbox/>
          </f:entry>
      </f:section>
