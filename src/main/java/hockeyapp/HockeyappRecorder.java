@@ -386,13 +386,13 @@ public class HockeyappRecorder extends Recorder {
 			save();
 		}
 
-		public Boolean getGlobalDebugMode() {
+		public boolean getGlobalDebugMode() {
 			return this.globalDebugMode;
 
 		}
 
 		@SuppressWarnings("unused") // Used by Jenkins
-		public void setGlobalDebugMode(Boolean globalDebugMode) {
+		public void setGlobalDebugMode(boolean globalDebugMode) {
 			this.globalDebugMode = globalDebugMode;
 			save();
 		}
