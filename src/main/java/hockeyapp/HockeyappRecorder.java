@@ -219,6 +219,9 @@ public class HockeyappRecorder extends Recorder {
 
 			final Map parsedMap = (Map) parser.parse(responseBody);
 
+			// Shadow defined appId for cleanup purposes
+			String appId = (String) parsedMap.get("public_identifier");
+
 			HockeyappBuildAction installAction = new HockeyappBuildAction();
 			installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
 			installAction.iconFileName = "package.gif";
