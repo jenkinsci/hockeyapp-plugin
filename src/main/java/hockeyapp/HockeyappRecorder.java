@@ -272,7 +272,7 @@ public class HockeyappRecorder extends Recorder {
 			speed /= 1024;
 			idx += 1;
 		}
-		listener.getLogger().println(String.format("%.2f", speed) + units[idx]);
+		listener.getLogger().println("HockeyApp Upload Speed: " + String.format("%.2f", speed) + units[idx]);
 	}
 
 
