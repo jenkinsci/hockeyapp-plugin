@@ -213,7 +213,7 @@ public class HockeyappRecorder extends Recorder {
 				listener.getLogger().println(responseBody);
 				return false;
 			} else if(isDebugEnabled()) { // DEBUG MODE output
-				String responseBody = new Scanner(is).useDelimiter("\\A").next();
+				String responseBody = IOUtils.toString(is);
 				listener.getLogger().println("RESPONSE: " + responseBody);
 			}
 
