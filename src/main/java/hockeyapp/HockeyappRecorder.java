@@ -22,6 +22,7 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.params.CoreConnectionPNames;
 import org.apache.tools.ant.types.FileSet;
 import org.json.simple.parser.JSONParser;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -98,6 +99,16 @@ public class HockeyappRecorder extends Recorder {
 		}
 	}
 
+	// create an httpclient with some default settings, including socket timeouts
+	// note that this doesn't solve potential write timeouts
+	// http://stackoverflow.com/questions/1338885/java-socket-output-stream-writes-do-they-block
+	private HttpClient createPreconfiguredHttpClient() {
+		HttpClient httpclient = new DefaultHttpClient();
+		httpclient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 60000);
+		httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, 60000);
+		return httpclient;
+	}
+
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
@@ -121,8 +132,8 @@ public class HockeyappRecorder extends Recorder {
 			listener.getLogger().println(file);
 
 			float fileSize = file.length();
+			HttpClient httpclient = createPreconfiguredHttpClient();
 
-			HttpClient httpclient = new DefaultHttpClient();
             HttpPost httpPost;
             if(useAppVersionURL) {
                 if (appId == null) {
@@ -334,7 +345,7 @@ public class HockeyappRecorder extends Recorder {
 
 	private boolean cleanupOldVersions(BuildListener listener, EnvVars vars) {
 		try {
-			HttpClient httpclient = new DefaultHttpClient();
+			HttpClient httpclient = createPreconfiguredHttpClient();
 			HttpPost httpPost = new HttpPost(
 			        "https://rink.hockeyapp.net/api/2/apps/" + vars.expand(appId)
 						+ "/app_versions/delete");
