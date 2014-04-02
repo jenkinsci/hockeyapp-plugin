@@ -54,6 +54,7 @@ public class HockeyappRecorder extends Recorder {
 	@Exported public boolean cleanupOld;
 	@Exported public String numberOldVersions;
 	@Exported public boolean useAppVersionURL;
+	@Exported public boolean debugMode;
 	@Exported public boolean useNotesTypeMarkdown;
     @Exported public String releaseNotesFileName;
 
@@ -63,7 +64,8 @@ public class HockeyappRecorder extends Recorder {
 	public HockeyappRecorder(String apiToken, String appId, boolean notifyTeam,
 			String buildNotes, String filePath, String dsymPath, String tags,
 			boolean downloadAllowed, boolean useChangelog, boolean cleanupOld,
-			String numberOldVersions, boolean useAppVersionURL, boolean useNotesTypeMarkdown, String releaseNotesFileName) {
+			String numberOldVersions, boolean useAppVersionURL, boolean debugMode,
+			boolean useNotesTypeMarkdown, String releaseNotesFileName) {
 
 		this.apiToken = Util.fixEmptyAndTrim(apiToken);
 		this.appId = Util.fixEmptyAndTrim(appId);
@@ -76,10 +78,11 @@ public class HockeyappRecorder extends Recorder {
 		this.useChangelog = useChangelog;
 		this.cleanupOld = cleanupOld;
 		this.numberOldVersions = Util.fixEmptyAndTrim(numberOldVersions);
-        this.useAppVersionURL = useAppVersionURL;
-        this.useNotesTypeMarkdown = useNotesTypeMarkdown;
-        this.releaseNotesFileName = Util.fixEmptyAndTrim(releaseNotesFileName);
-    }
+		this.useAppVersionURL = useAppVersionURL;
+		this.debugMode = debugMode;
+		this.useNotesTypeMarkdown = useNotesTypeMarkdown;
+		this.releaseNotesFileName = Util.fixEmptyAndTrim(releaseNotesFileName);
+	}
 
 	@Override
 	public DescriptorImpl getDescriptor() {
@@ -97,6 +100,10 @@ public class HockeyappRecorder extends Recorder {
 		} else {
 			return this.apiToken;
 		}
+	}
+
+	public boolean isDebugEnabled() {
+		return this.debugMode || this.getDescriptor().getGlobalDebugMode();
 	}
 
 	// create an httpclient with some default settings, including socket timeouts
@@ -197,20 +204,23 @@ public class HockeyappRecorder extends Recorder {
 
 			InputStream is = resEntity.getContent();
 
+			String responseBody = IOUtils.toString(is);
 			// Improved error handling.
 			if (response.getStatusLine().getStatusCode() != 201) {
-				String responseBody = new Scanner(is).useDelimiter("\\A")
-						.next();
 				listener.getLogger().println(
 						Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
 				listener.getLogger().println(responseBody);
 				return false;
+			} else if(isDebugEnabled()) { // DEBUG MODE output
+				listener.getLogger().println("RESPONSE: " + responseBody);
 			}
 
 			JSONParser parser = new JSONParser();
 
-			final Map parsedMap = (Map) parser.parse(new BufferedReader(
-					new InputStreamReader(is)));
+			final Map parsedMap = (Map) parser.parse(responseBody);
+
+			// Shadow defined appId for cleanup purposes
+			String appId = (String) parsedMap.get("public_identifier");
 
 			HockeyappBuildAction installAction = new HockeyappBuildAction();
 			installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
@@ -240,7 +250,7 @@ public class HockeyappRecorder extends Recorder {
 					listener.getLogger().println(Messages.ABORTING_CLEANUP());
 					return false;
 				}
-				cleanupOldVersions(listener, vars);
+				cleanupOldVersions(listener, vars,appId);
 			}
 		} catch (Exception e) {
 			e.printStackTrace(listener.getLogger());
@@ -316,7 +326,7 @@ public class HockeyappRecorder extends Recorder {
 		return actions;
 	}
 
-	private boolean cleanupOldVersions(BuildListener listener, EnvVars vars) {
+	private boolean cleanupOldVersions(BuildListener listener, EnvVars vars, String appId) {
 		try {
 			HttpClient httpclient = createPreconfiguredHttpClient();
 			HttpPost httpPost = new HttpPost(
@@ -369,13 +379,26 @@ public class HockeyappRecorder extends Recorder {
 		public String getDefaultToken() {
 			return defaultToken;
 		}
-
+		
+		@SuppressWarnings("unused") // Used by Jenkins
 		public void setDefaultToken(String defaultToken) {
 			this.defaultToken = defaultToken;
 			save();
 		}
 
+		public boolean getGlobalDebugMode() {
+			return this.globalDebugMode;
+
+		}
+
+		@SuppressWarnings("unused") // Used by Jenkins
+		public void setGlobalDebugMode(boolean globalDebugMode) {
+			this.globalDebugMode = globalDebugMode;
+			save();
+		}
+
 		private String defaultToken;
+		private boolean globalDebugMode = false;
 
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
 			// Indicates that this builder can be used with all kinds of project
