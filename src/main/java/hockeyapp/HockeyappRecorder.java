@@ -262,6 +262,7 @@ public class HockeyappRecorder extends Recorder {
 
 	private void printUploadSpeed(long duration, float fileSize, BuildListener listener) {
 		Float speed = fileSize/duration;
+		speed *= 8000; // In order to get bits pers second not bytes per miliseconds
 
 		if (Float.isNaN(speed)) listener.getLogger().println("NaN bps");
 
