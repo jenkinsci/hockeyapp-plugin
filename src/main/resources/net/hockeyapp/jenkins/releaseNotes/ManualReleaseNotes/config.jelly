@@ -1,0 +1,9 @@
+<j:jelly xmlns:j="jelly:core"
+         xmlns:f="/lib/form">
+    <f:entry title="Release Notes" field="releaseNotes" >
+        <f:textarea checkUrl="'descriptorByName/net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes/checkReleaseNotes?value='+escape(this.value)"/>
+    </f:entry>
+    <f:entry title="Interpret Release Notes as Markdown" field="isMarkdown">
+        <f:checkbox />
+    </f:entry>
+</j:jelly>

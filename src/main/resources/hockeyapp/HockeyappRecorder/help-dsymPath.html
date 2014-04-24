@@ -1,9 +1,10 @@
 <div>
 An optional path, relative to the build's workspace, to the generated dSYM.zip (iOS and MacOS) or mapping.txt (Android) file.<br/>
 You can include build variables here like <code>${BUILD_NUMBER}</code> and they'll be expanded at build time.<br/>
-<p/>
+<br/>
 e.g. "MyApp/build/Beta-iphoneos/MyApp-Beta-${BUILD_NUMBER}.dsym.zip if your use ${BUILD_NUMBER} as technical version number (CFBundleShortVersionString).
-<p/>
+<br/>
 Can use wildcards like 'module/dist/**/*.dSYM.zip'.
-See <a href='http://ant.apache.org/manual/Types/fileset.html'> the @includes of Ant fileset</a> for the exact format.
+See <a href='http://ant.apache.org/manual/Types/fileset.html'> the @includes of Ant fileset</a> for the exact format.<br/>
+Further information on symbolicate a crash can be found <a href="http://support.hockeyapp.net/kb/about-general-faq/how-to-manually-upload-and-symbolicate-a-crash">here</a>.
 </div>

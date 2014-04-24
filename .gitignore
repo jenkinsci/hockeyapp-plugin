@@ -1,5 +1,18 @@
-.DS_Store
-target/
-.settings/
+# Files #
+*.class
 .project
 .classpath
+.DS_Store
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.iml
+
+# Directories #
+.idea/
+target/
+.settings/
+
+
