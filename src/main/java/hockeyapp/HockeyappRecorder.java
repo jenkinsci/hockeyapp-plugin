@@ -132,8 +132,9 @@ public class HockeyappRecorder extends Recorder {
 			tempDir.delete();
 			tempDir.mkdirs();
 
-			FileSet fileSet = Util.createFileSet(new File(build.getWorkspace().getRemote()),
-					vars.expand(filePath), null);
+            String expandedFilePath = vars.expand(filePath);
+            build.getWorkspace().copyRecursiveTo(expandedFilePath, null, new FilePath(tempDir));
+            FileSet fileSet = Util.createFileSet(tempDir, expandedFilePath, null);
 			// Take the first one that matches the pattern
 			File file = new File(fileSet.iterator().next().toString());
 			listener.getLogger().println(file);
@@ -187,8 +188,9 @@ public class HockeyappRecorder extends Recorder {
 			entity.addPart("ipa", fileBody);
 
 			if (dsymPath != null) {
-				FileSet dsymFileSet = Util.createFileSet(new File(build.getWorkspace().getRemote()),
-					vars.expand(dsymPath), null);
+                String dsymFilePath = vars.expand(dsymPath);
+                build.getWorkspace().copyRecursiveTo(dsymFilePath, null, new FilePath(tempDir));
+				FileSet dsymFileSet = Util.createFileSet(tempDir, dsymFilePath, null);
 				// Take the first one that matches the pattern
 				File dsymFile = new File(dsymFileSet.iterator().next().toString());
 				listener.getLogger().println(dsymFile);
