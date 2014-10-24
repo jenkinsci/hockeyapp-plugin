@@ -207,10 +207,12 @@ public class HockeyappRecorder extends Recorder {
             if (application.dsymPath != null) {
                 FilePath remoteDsymFiles[] = remoteWorkspace.list(vars.expand(application.dsymPath));
                 // Take the first one that matches the pattern
-                File dsymFile = getLocalFileFromFilePath(remoteDsymFiles[0], tempDir);
-                listener.getLogger().println(dsymFile);
-                FileBody dsymFileBody = new FileBody(dsymFile);
-                entity.addPart("dsym", dsymFileBody);
+                if(remoteDsymFiles!=null && remoteDsymFiles.length>0) {
+                    File dsymFile = getLocalFileFromFilePath(remoteDsymFiles[0], tempDir);
+                    listener.getLogger().println(dsymFile);
+                    FileBody dsymFileBody = new FileBody(dsymFile);
+                    entity.addPart("dsym", dsymFileBody);
+                }
             }
 
             if (application.libsPath != null) {
