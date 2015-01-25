@@ -8,13 +8,17 @@ import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.export.Exported;
 
 
 public class AppCreation extends RadioButtonSupport {
+    @Exported
+    public boolean publicPage;
 
     @DataBoundConstructor
-    public AppCreation() {
+    public AppCreation(boolean publicPage) {
 
+        this.publicPage = publicPage;
     }
 
     public Descriptor<RadioButtonSupport> getDescriptor() {
@@ -36,7 +40,8 @@ public class AppCreation extends RadioButtonSupport {
 
         @Override
         public RadioButtonSupport newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return new AppCreation();
+            boolean isPublicPage = formData.getBoolean("publicPage");
+            return new AppCreation(isPublicPage);
         }
     }
 }
