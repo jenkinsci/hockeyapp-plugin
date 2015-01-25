@@ -14,6 +14,7 @@ import hudson.util.RunList;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.NoReleaseNotes;
+import net.hockeyapp.jenkins.uploadMethod.AppCreation;
 import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
@@ -243,6 +244,11 @@ public class HockeyappRecorder extends Recorder {
                 entity.addPart("notify", new StringBody(application.notifyTeam ? "1" : "0"));
                 entity.addPart("status",
                         new StringBody(application.downloadAllowed ? "2" : "1"));
+
+                if (application.uploadMethod instanceof AppCreation) {
+                    AppCreation appCreation = (AppCreation) application.uploadMethod;
+                    entity.addPart("private", new StringBody(appCreation.publicPage ? "false" : "true"));
+                }
                 httpPost.setEntity(entity);
 
                 long startTime = System.currentTimeMillis();
