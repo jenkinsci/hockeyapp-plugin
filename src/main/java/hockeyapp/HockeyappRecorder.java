@@ -4,6 +4,7 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 import hudson.*;
 import hudson.model.*;
+import hudson.model.Queue;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -11,6 +12,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.RunList;
+import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.NoReleaseNotes;
@@ -48,6 +50,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -56,7 +59,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 @XStreamConverter(HockeyappRecorderConverter.class)
-public class HockeyappRecorder extends Recorder {
+public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public static final long SCHEMA_VERSION_NUMBER = 2L;
     public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
@@ -77,6 +80,8 @@ public class HockeyappRecorder extends Recorder {
     @Exported
     public boolean failGracefully;
 
+    public BaseUrlHolder baseUrlHolder;
+
     private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
     @DataBoundConstructor
@@ -85,11 +90,36 @@ public class HockeyappRecorder extends Recorder {
         this.schemaVersion = SCHEMA_VERSION_NUMBER;
         this.applications = applications;
         this.debugMode = debugMode;
+        this.baseUrlHolder = baseUrlHolder;
         if (baseUrlHolder != null) {
             this.baseUrl = baseUrlHolder.baseUrl;
         }
 
         this.failGracefully = failGracefully;
+    }
+
+    List<HockeyappApplication> getApplications()
+    {
+        return applications;
+    }
+
+    boolean getDebugMode()
+    {
+        return debugMode;
+    }
+
+    String getBaseUrl()
+    {
+        return baseUrl;
+    }
+
+    BaseUrlHolder getBaseUrlHolder()
+    {
+        return baseUrlHolder;
+    }
+
+    boolean getFailGracefully(){
+        return failGracefully;
     }
 
     @Override
@@ -144,6 +174,25 @@ public class HockeyappRecorder extends Recorder {
     }
 
     @Override
+    public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+        if (build.getResult().isWorseOrEqualTo(Result.FAILURE))
+        {
+            build.setResult(Result.FAILURE);
+            return;
+        }
+
+
+        boolean result = true;
+        for (HockeyappApplication application : applications) {
+            result &= performForApplication(build, filePath, launcher, listener, application);
+        }
+        if(!result)
+        {
+           build.setResult(Result.FAILURE);
+        }
+    }
+
+    @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
                            BuildListener listener) {
         if (build.getResult().isWorseOrEqualTo(Result.FAILURE))
@@ -155,6 +204,203 @@ public class HockeyappRecorder extends Recorder {
         }
 
         return result;
+    }
+
+    private boolean performForApplication(Run<?, ?> build, FilePath workspace, Launcher launcher,
+                                          TaskListener listener, HockeyappApplication application) {
+        listener.getLogger().println(Messages.UPLOADING_TO_HOCKEYAPP());
+        File tempDir = null;
+        try {
+            EnvVars vars = build.getEnvironment(listener);
+
+            // Copy remote file to local file system.
+            tempDir = File.createTempFile("jtf", null);
+            tempDir.delete();
+            tempDir.mkdirs();
+
+            FilePath remoteWorkspace = new FilePath(launcher.getChannel(), workspace.getRemote());
+            FilePath[] remoteFiles = remoteWorkspace.list(vars.expand(application.filePath));
+            if (remoteFiles.length == 0) {
+                listener.getLogger().println("No IPA/APK found to upload in: " + vars.expand(application.filePath));
+                return this.failGracefully;
+            }
+
+            ArrayIterator remoteFilesIterator = new ArrayIterator(remoteFiles);
+            while (remoteFilesIterator.hasNext()) {
+                FilePath remoteFile = (FilePath) remoteFilesIterator.next();
+                File file = getLocalFileFromFilePath(remoteFile, tempDir);
+                listener.getLogger().println(file);
+
+                float fileSize = file.length();
+
+                if (application.uploadMethod == null) {
+                    listener.getLogger().println("No upload method specified!");
+                    return this.failGracefully;
+                }
+
+                String path = createPath(listener, vars, application);
+                URL host = createHostUrl(vars);
+                URL url = new URL(host, path);
+                if (url == null) {
+                    return this.failGracefully;
+                }
+
+                HttpClient httpclient = createPreconfiguredHttpClient();
+
+                HttpPost httpPost = new HttpPost(url.toURI());
+
+
+                FileBody fileBody = new FileBody(file);
+                httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+                MultipartEntity entity = new MultipartEntity();
+
+                if (application.releaseNotesMethod != null) {
+                    createReleaseNotes(build, workspace, entity, listener, tempDir, vars, application);
+                }
+
+
+                entity.addPart("ipa", fileBody);
+
+                if (application.dsymPath != null && !vars.expand(application.dsymPath).isEmpty()) {
+                    FilePath remoteDsymFiles[] = remoteWorkspace.list(vars.expand(application.dsymPath));
+                    // Take the first one that matches the pattern
+                    if (remoteDsymFiles.length == 0) {
+                        listener.getLogger().println("No dSYM found to upload in: " + vars.expand(application.dsymPath));
+                        return this.failGracefully;
+                    }
+                    File dsymFile = getLocalFileFromFilePath(remoteDsymFiles[0], tempDir);
+                    listener.getLogger().println(dsymFile);
+                    FileBody dsymFileBody = new FileBody(dsymFile);
+                    entity.addPart("dsym", dsymFileBody);
+                }
+
+                if (application.libsPath != null && !vars.expand(application.libsPath).isEmpty()) {
+                    FilePath remoteLibsFiles[] = remoteWorkspace.list(vars.expand(application.libsPath));
+                    // Take the first one that matches the pattern
+                    if (remoteLibsFiles.length == 0) {
+                        listener.getLogger().println("No LIBS found to upload in: " + vars.expand(application.libsPath));
+                        return this.failGracefully;
+                    }
+                    File libsFile = getLocalFileFromFilePath(remoteLibsFiles[0], tempDir);
+                    listener.getLogger().println(libsFile);
+                    FileBody libsFileBody = new FileBody(libsFile);
+                    entity.addPart("libs", libsFileBody);
+                }
+
+                if (application.tags != null && !vars.expand(application.tags).isEmpty() && application.tags.length() > 0)
+                    entity.addPart("tags", new StringBody(vars.expand(application.tags)));
+
+                entity.addPart("mandatory", new StringBody(application.mandatory ? "1" : "0"));
+
+                if (application.teams != null && !vars.expand(application.teams).isEmpty() && application.teams.length() > 0)
+                    entity.addPart("teams", new StringBody(vars.expand(application.teams)));
+
+                entity.addPart("notify", new StringBody(application.notifyTeam ? "1" : "0"));
+                entity.addPart("status", new StringBody(application.downloadAllowed ? "2" : "1"));
+                httpPost.setEntity(entity);
+
+                long startTime = System.currentTimeMillis();
+                HttpResponse response = httpclient.execute(httpPost);
+                long duration = System.currentTimeMillis() - startTime;
+
+                printUploadSpeed(duration, fileSize, listener);
+
+                HttpEntity resEntity = response.getEntity();
+
+                InputStream is = resEntity.getContent();
+
+                String responseBody = IOUtils.toString(is);
+                // Improved error handling.
+                if (response.getStatusLine().getStatusCode() != 201) {
+                    listener.getLogger().println(
+                            Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
+                    listener.getLogger().println(responseBody);
+                    return this.failGracefully;
+                } else if (isDebugEnabled()) { // DEBUG MODE output
+                    listener.getLogger().println("RESPONSE: " + responseBody);
+                }
+
+                JSONParser parser = new JSONParser();
+
+                final Map parsedMap = (Map) parser.parse(responseBody);
+
+
+
+                String buildId = Long.toString((Long)parsedMap.get("id"));
+
+                HockeyappBuildAction installAction = new HockeyappBuildAction();
+                String installUrl = (String) parsedMap.get("public_url") +
+                        "/app_versions/" + buildId;
+                installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
+                installAction.iconFileName = "package.gif";
+                installAction.urlName = installUrl;
+                build.addAction(installAction);
+
+                HockeyappBuildAction configureAction = new HockeyappBuildAction();
+                String configUrl = (String) parsedMap.get("config_url");
+                configureAction.displayName = Messages.HOCKEYAPP_CONFIG_LINK();
+                configureAction.iconFileName = "gear2.gif";
+                configureAction.urlName = configUrl;
+                build.addAction(configureAction);
+
+                int appIndex = applications.indexOf(application);
+
+                EnvAction envData = new EnvAction();
+                build.addAction(envData);
+
+                if (envData != null) {
+
+                    if (appIndex == 0) {
+                        envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
+                        envData.add("HOCKEYAPP_CONFIG_URL", configUrl);
+                    }
+
+                    envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
+                    envData.add("HOCKEYAPP_CONFIG_URL_" + appIndex, configUrl);
+                }
+
+                String appId;
+                if (application.getNumberOldVersions() != null) {
+                    if (application.uploadMethod instanceof VersionCreation) {
+                        appId = vars.expand(((VersionCreation) application.uploadMethod).getAppId());
+                    } else {
+                        //load App ID from reponse
+                        appId = (String) parsedMap.get("public_identifier");
+                    }
+                    if (appId == null) {
+                        listener.getLogger().println(Messages.APP_ID_MISSING_FOR_CLEANUP());
+                        listener.getLogger().println(Messages.ABORTING_CLEANUP());
+                        return this.failGracefully;
+                    }
+                    if (application.getNumberOldVersions() == null || !StringUtils.isNumeric(application.getNumberOldVersions())) {
+                        listener.getLogger().println(Messages.COUNT_MISSING_FOR_CLEANUP());
+                        listener.getLogger().println(Messages.ABORTING_CLEANUP());
+                        return this.failGracefully;
+                    }
+                    if (Integer.parseInt(application.getNumberOldVersions()) < 1) {
+                        listener.getLogger().println(Messages.TOO_FEW_VERSIONS_RETAINED());
+                        listener.getLogger().println(Messages.ABORTING_CLEANUP());
+                        return this.failGracefully;
+                    }
+                    cleanupOldVersions(listener, vars, appId, host, application);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace(listener.getLogger());
+            return this.failGracefully;
+        } finally {
+            try {
+                FileUtils.deleteDirectory(tempDir);
+            } catch (IOException e) {
+                try {
+                    FileUtils.forceDeleteOnExit(tempDir);
+                } catch (IOException e1) {
+                    e1.printStackTrace(listener.getLogger());
+                }
+            }
+        }
+
+        return true;
     }
 
     private boolean performForApplication(AbstractBuild<?, ?> build, Launcher launcher,
@@ -370,6 +616,81 @@ public class HockeyappRecorder extends Recorder {
         return path;
     }
 
+    private String createPath(TaskListener listener, EnvVars vars, HockeyappApplication application) {
+        String path;
+        if (application.uploadMethod instanceof VersionCreation) {
+            VersionCreation versionCreation = (VersionCreation) application.uploadMethod;
+            if (versionCreation.getAppId() != null && !vars.expand(versionCreation.getAppId()).isEmpty()) {
+                path = "/api/2/apps/" + vars.expand(versionCreation.getAppId()) + "/app_versions/upload";
+            } else {
+                listener.getLogger().println("No AppId specified!");
+                path = null;
+            }
+        } else {
+            path = "/api/2/apps/upload";
+        }
+        return path;
+    }
+
+
+    private void createReleaseNotes(Run<?, ?> build, FilePath workspace, MultipartEntity entity, TaskListener listener,
+                                    File tempDir, EnvVars vars, HockeyappApplication application)
+            throws IOException, InterruptedException {
+        if (application.releaseNotesMethod instanceof NoReleaseNotes) {
+            return;
+        } else if (application.releaseNotesMethod instanceof ManualReleaseNotes) {
+            ManualReleaseNotes manualReleaseNotes = (ManualReleaseNotes) application.releaseNotesMethod;
+            if (manualReleaseNotes.getReleaseNotes() != null) {
+                entity.addPart("notes", new StringBody(vars.expand(manualReleaseNotes.getReleaseNotes()), UTF8_CHARSET));
+                entity.addPart("notes_type", new StringBody(manualReleaseNotes.isMarkdown() ? "1" : "0"));
+            }
+        } else if (application.releaseNotesMethod instanceof FileReleaseNotes) {
+            FileReleaseNotes fileReleaseNotes = (FileReleaseNotes) application.releaseNotesMethod;
+            if (fileReleaseNotes.getFileName() != null) {
+                File releaseNotesFile = getFileLocally(workspace, vars.expand(fileReleaseNotes.getFileName()), tempDir);
+                listener.getLogger().println(releaseNotesFile);
+                String releaseNotes = readReleaseNotesFile(releaseNotesFile);
+                entity.addPart("notes", new StringBody(releaseNotes, UTF8_CHARSET));
+                entity.addPart("notes_type", new StringBody(fileReleaseNotes.isMarkdown() ? "1" : "0"));
+            }
+
+        } else {
+            StringBuilder sb = new StringBuilder();
+
+            ItemGroup<?> ig = build.getParent().getParent();
+            nextItem:
+            for (Item item : ig.getItems()) {
+                if (!item.getFullDisplayName().equals(build.getFullDisplayName())
+                        && !item.getFullDisplayName().equals(build.getParent().getFullDisplayName())) {
+                    continue;
+                }
+
+                for (Job<?, ?> job : item.getAllJobs()) {
+                    if (job instanceof AbstractProject<?, ?>) {
+                        //log("Job: " + job.getFullName());
+                        AbstractProject<?, ?> p = (AbstractProject<?, ?>) job;
+                        //log("Project: " + p.getFullName());
+
+                        for (AbstractBuild<?, ?> b : p.getBuilds()) {
+                            boolean hasManyChangeSets = b.getChangeSet().getItems().length > 1;
+                            for (Entry entry : b.getChangeSet()) {
+                                sb.append("\n");
+                                if (hasManyChangeSets) {
+                                    sb.append("* ");
+                                }
+                                sb.append(entry.getAuthor()).append(": ").append(entry.getMsg());
+                            }
+                        }
+                    }
+                }
+
+            }
+            entity.addPart("notes", new StringBody(sb.toString(), UTF8_CHARSET));
+            entity.addPart("notes_type", new StringBody("0"));
+        }
+
+    }
+
     private void createReleaseNotes(AbstractBuild<?, ?> build, MultipartEntity entity, BuildListener listener,
                                     File tempDir, EnvVars vars, HockeyappApplication application)
             throws IOException, InterruptedException {
@@ -420,6 +741,21 @@ public class HockeyappRecorder extends Recorder {
     }
 
     private void printUploadSpeed(long duration, float fileSize, BuildListener listener) {
+        Float speed = fileSize / duration;
+        speed *= 8000; // In order to get bits pers second not bytes per miliseconds
+
+        if (Float.isNaN(speed)) listener.getLogger().println("NaN bps");
+
+        String[] units = {"bps", "Kbps", "Mbps", "Gbps"};
+        int idx = 0;
+        while (speed > 1024 && idx <= units.length - 1) {
+            speed /= 1024;
+            idx += 1;
+        }
+        listener.getLogger().println("HockeyApp Upload Speed: " + String.format("%.2f", speed) + units[idx]);
+    }
+
+    private void printUploadSpeed(long duration, float fileSize, TaskListener listener) {
         Float speed = fileSize / duration;
         speed *= 8000; // In order to get bits pers second not bytes per miliseconds
 
@@ -542,6 +878,50 @@ public class HockeyappRecorder extends Recorder {
         }
         return true;
     }
+
+    private boolean cleanupOldVersions(TaskListener listener, EnvVars vars, String appId, URL host,
+                                       HockeyappApplication application) {
+        try {
+            HttpClient httpclient = createPreconfiguredHttpClient();
+            String path = "/api/2/apps/" + vars.expand(appId)+ "/app_versions/delete";
+            HttpPost httpPost = new HttpPost(new URL(host, path).toURI());
+            httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+            nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
+            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            HttpResponse response = httpclient.execute(httpPost);
+            HttpEntity resEntity = response.getEntity();
+            if (resEntity != null) {
+                InputStream is = resEntity.getContent();
+
+                // Improved error handling.
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    String responseBody = new Scanner(is).useDelimiter(
+                            "\\A").next();
+                    listener.getLogger().println(
+                            Messages.UNEXPECTED_RESPONSE_CODE(
+                                    response.getStatusLine().getStatusCode())
+                    );
+                    listener.getLogger().println(responseBody);
+                    return false;
+                }
+
+                JSONParser parser = new JSONParser();
+                final Map parsedMap = (Map) parser.parse(
+                        new BufferedReader(new InputStreamReader(is)));
+                listener.getLogger().println(
+                        Messages.DELETED_OLD_VERSIONS(String.valueOf(
+                                parsedMap.get("total_entries")))
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace(listener.getLogger());
+            return false;
+        }
+        return true;
+    }
+
+
 
     public static class BaseUrlHolder {
 
