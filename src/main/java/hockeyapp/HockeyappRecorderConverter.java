@@ -9,6 +9,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import hudson.Util;
 import jenkins.model.Jenkins;
+import net.hockeyapp.jenkins.OldVersionHolder;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.releaseNotes.ChangelogReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
@@ -81,7 +82,7 @@ public class HockeyappRecorderConverter implements Converter {
         public String baseUrl;
         public RadioButtonSupport releaseNotesMethod;
         public boolean failGracefully;
-        public HockeyappApplication.OldVersionHolder oldVersionHolder;
+        public OldVersionHolder oldVersionHolder;
 
         public HockeyappRecorderObsolete() {
             super();
@@ -115,7 +116,7 @@ public class HockeyappRecorderConverter implements Converter {
 
             if (oldVersionHolder == null) {
                 oldVersionHolder =
-                        new HockeyappApplication.OldVersionHolder(Util.fixEmptyAndTrim(numberOldVersions), Util.fixEmptyAndTrim(sortOldVersions), Util.fixEmptyAndTrim(strategyOldVersions));
+                        new OldVersionHolder(Util.fixEmptyAndTrim(numberOldVersions), Util.fixEmptyAndTrim(sortOldVersions), Util.fixEmptyAndTrim(strategyOldVersions));
             }
 
             return this;
