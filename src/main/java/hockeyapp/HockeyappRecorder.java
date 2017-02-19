@@ -54,6 +54,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @XStreamConverter(HockeyappRecorderConverter.class)
 public class HockeyappRecorder extends Recorder {
@@ -117,13 +118,29 @@ public class HockeyappRecorder extends Recorder {
     // create an httpclient with some default settings, including socket timeouts
     // note that this doesn't solve potential write timeouts
     // http://stackoverflow.com/questions/1338885/java-socket-output-stream-writes-do-they-block
-    private HttpClient createPreconfiguredHttpClient() {
+    private HttpClient createPreconfiguredHttpClient(URL url) {
         DefaultHttpClient httpclient = new DefaultHttpClient();
+
         HttpParams params = httpclient.getParams();
         HttpConnectionParams.setConnectionTimeout(params, this.getDescriptor().getTimeoutInt());
         HttpConnectionParams.setSoTimeout(params, this.getDescriptor().getTimeoutInt());
-        // Proxy setting
-        if (Hudson.getInstance() != null && Hudson.getInstance().proxy != null) {
+
+        boolean hasProxy = Hudson.getInstance() != null &&
+                Hudson.getInstance().proxy != null;
+
+        // ProxyConfig might have noproxy-exception for certain hosts
+        boolean noProxy = false;
+        if (hasProxy) {
+            List<Pattern> noProxyHostPatterns = Hudson.getInstance().proxy.getNoProxyHostPatterns();
+             for (int i = 0; i < noProxyHostPatterns.size(); i++) {
+                Pattern noproxypattern = noProxyHostPatterns.get(i);
+                noProxy = noProxy || noproxypattern.matcher(url.getHost()).matches();
+            }
+        }
+
+        // Proxy setting, we have a Proxy _and_ the provided URL does not match any no-proxy-override
+        if (hasProxy &&
+                ! noProxy ) {
 
             ProxyConfiguration configuration = Hudson.getInstance().proxy;
             Credentials cred = null;
@@ -196,7 +213,7 @@ public class HockeyappRecorder extends Recorder {
                     return this.failGracefully;
                 }
 
-                HttpClient httpclient = createPreconfiguredHttpClient();
+                HttpClient httpclient = createPreconfiguredHttpClient(url);
 
                 HttpPost httpPost = new HttpPost(url.toURI());
 
@@ -504,9 +521,10 @@ public class HockeyappRecorder extends Recorder {
     private boolean cleanupOldVersions(BuildListener listener, EnvVars vars, String appId, URL host,
                                        HockeyappApplication application) {
         try {
-            HttpClient httpclient = createPreconfiguredHttpClient();
             String path = "/api/2/apps/" + vars.expand(appId)+ "/app_versions/delete";
-            HttpPost httpPost = new HttpPost(new URL(host, path).toURI());
+            URL url = new URL(host, path);
+            HttpClient httpclient = createPreconfiguredHttpClient(url);
+            HttpPost httpPost = new HttpPost(url.toURI());
             httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
             nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
