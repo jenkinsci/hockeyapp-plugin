@@ -1,16 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.532.1</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>1.609.2</version>
   </parent>
+
+  <properties>
+    <jenkins.version>1.609.2</jenkins.version>
+    <java.level>7</java.level>
+    <jenkins-test-harness.version>2.13</jenkins-test-harness.version>
+  </properties>
 
   <artifactId>hockeyapp</artifactId>
   <name>HockeyApp Plugin</name>
-  <description>Uploads iOS, Mac or Android apps to hockeyapp.net</description>
-  <version>1.2.2-SNAPSHOT</version>
+  <description>Uploads iOS, Mac or Android apps to a HockeyApp server.</description>
+  <version>1.2.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
+
+ <licenses>
+     <license>
+         <name>MIT license</name>
+         <comments>All source code is under the MIT license.</comments>
+     </license>
+ </licenses>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
@@ -27,12 +41,27 @@
     <tag>HEAD</tag>
   </scm>
 
+  <distributionManagement>
+    <repository>
+      <id>maven.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>maven.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <url>http://wiki.jenkins-ci.org/display/JENKINS/HockeyApp+Plugin</url>
   <developers>
     <developer>
       <id>ohoeltke</id>
       <name>Oliver Hoeltke</name>
       <email>ohoeltke@gmail.com</email>
+    </developer>
+    <developer>
+      <id>Brantone</id>
+      <name>Brenton Bartel</name>
     </developer>
   </developers>
   <pluginRepositories>
@@ -70,7 +99,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.0.1</version>
+      <version>4.5.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
