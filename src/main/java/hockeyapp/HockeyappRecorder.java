@@ -147,7 +147,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // create an httpclient with some default settings, including socket timeouts
     // note that this doesn't solve potential write timeouts
     // http://stackoverflow.com/questions/1338885/java-socket-output-stream-writes-do-they-block
-    private HttpClient createPreconfiguredHttpClient(URL url) {
+    private HttpClient createPreconfiguredHttpClient(URL url, PrintStream logger) {
         DefaultHttpClient httpclient = new DefaultHttpClient();
 
         HttpParams params = httpclient.getParams();
@@ -158,18 +158,22 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 Hudson.getInstance().proxy != null;
 
         // ProxyConfig might have noproxy-exception for certain hosts
-        boolean noProxy = false;
+        boolean useProxy = true;
+        String matchedPattern = null; // to log properly
         if (hasProxy) {
             List<Pattern> noProxyHostPatterns = Hudson.getInstance().proxy.getNoProxyHostPatterns();
              for (int i = 0; i < noProxyHostPatterns.size(); i++) {
                 Pattern noproxypattern = noProxyHostPatterns.get(i);
-                noProxy = noProxy || noproxypattern.matcher(url.getHost()).matches();
+                if (noproxypattern.matcher(url.getHost()).matches()) {
+                    useProxy = false;
+                    matchedPattern = noproxypattern.toString();
+                };
             }
         }
 
         // Proxy setting, we have a Proxy _and_ the provided URL does not match any no-proxy-override
         if (hasProxy &&
-                ! noProxy ) {
+                useProxy ) {
 
             ProxyConfiguration configuration = Hudson.getInstance().proxy;
             Credentials cred = null;
@@ -186,10 +190,21 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
         }
 
+        /// Logging output ////////////////
+        logger              .format("Proxy Settings: For the URL [%s] \n", url)
+                            .format("  Found proxy configuration [%s] \n", hasProxy);
+        if(hasProxy) {
+                logger      .format("  Used proxy configuration  [%s] \n", useProxy);
+                if (matchedPattern != null) {
+                    logger  .format("  Found matching Proxy exception rule [%s] \n", matchedPattern);
+                }
+        }
+        /// /////// ////// ////////////////
+
+
         return httpclient;
     }
 
-    @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         if (build.getResult() != null && build.getResult().isWorseOrEqualTo(Result.FAILURE))
         {
@@ -266,7 +281,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     return this.failGracefully;
                 }
 
-                HttpClient httpclient = createPreconfiguredHttpClient(url);
+                HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
 
                 HttpPost httpPost = new HttpPost(url.toURI());
 
@@ -613,7 +628,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         try {
             String path = "/api/2/apps/" + vars.expand(appId)+ "/app_versions/delete";
             URL url = new URL(host, path);
-            HttpClient httpclient = createPreconfiguredHttpClient(url);
+            HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
             HttpPost httpPost = new HttpPost(url.toURI());
             httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
