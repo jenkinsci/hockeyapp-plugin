@@ -352,6 +352,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                 int appIndex = applications.indexOf(application);
 
+                logger.println("HOCKEYAPP_INSTALL_URL" + installUrl);
+                logger.println("HOCKEYAPP_CONFIG_URL" + configUrl);
+
                 EnvAction envData = new EnvAction();
                 build.addAction(envData);
 
