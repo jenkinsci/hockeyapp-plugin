@@ -7,6 +7,7 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+import net.hockeyapp.jenkins.OldVersionHolder;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
 import net.hockeyapp.jenkins.releaseNotes.ChangelogReleaseNotes;
@@ -94,20 +95,6 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         return new DescriptorImpl();
     }
 
-    public static class OldVersionHolder {
-        private String numberOldVersions;
-        // Defaults per https://support.hockeyapp.net/kb/api/api-versions#delete-multiple-versions
-        private String sortOldVersions = "version";
-        private String strategyOldVersions = "purge";
-
-        @DataBoundConstructor
-        public OldVersionHolder(String numberOldVersions, String sortOldVersions, String strategyOldVersions) {
-            this.numberOldVersions = Util.fixEmptyAndTrim(numberOldVersions);
-            this.sortOldVersions = Util.fixEmptyAndTrim(sortOldVersions);
-            this.strategyOldVersions = Util.fixEmptyAndTrim(strategyOldVersions);
-        }
-    }
-
     @Extension
     public static final class DescriptorImpl extends Descriptor<HockeyappApplication> {
         @Override
@@ -142,7 +129,6 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
             }
             return uploadMethods;
         }
-
 
         @SuppressWarnings("unused")
         public FormValidation doCheckApiToken(@QueryParameter String value) throws IOException, ServletException {

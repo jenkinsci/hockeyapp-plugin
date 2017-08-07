@@ -2,6 +2,7 @@ package net.hockeyapp.jenkins.uploadMethod;
 
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
