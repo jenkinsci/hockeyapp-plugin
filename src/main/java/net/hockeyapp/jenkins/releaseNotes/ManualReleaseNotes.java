@@ -60,7 +60,7 @@ public class ManualReleaseNotes extends RadioButtonSupport {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckReleaseNotes(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must enter Release Notes.");
             } else {
                 return FormValidation.ok();

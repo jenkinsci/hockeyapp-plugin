@@ -60,7 +60,7 @@ public class FileReleaseNotes extends RadioButtonSupport {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckFileName(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must enter a File Name.");
             } else {
                 return FormValidation.ok();
