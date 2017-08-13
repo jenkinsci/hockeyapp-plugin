@@ -67,7 +67,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
     public static final int DEFAULT_TIMEOUT = 60000;
 
-
     @Exported
     public List<HockeyappApplication> applications;
 
@@ -351,16 +350,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     EnvAction envData = new EnvAction();
                     build.addAction(envData);
 
-                    if (envData != null) {
-
-                        if (appIndex == 0) {
-                            envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
-                            envData.add("HOCKEYAPP_CONFIG_URL", configUrl);
-                        }
-
-                        envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
-                        envData.add("HOCKEYAPP_CONFIG_URL_" + appIndex, configUrl);
+                    if (appIndex == 0) {
+                        envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
+                        envData.add("HOCKEYAPP_CONFIG_URL", configUrl);
                     }
+
+                    envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
+                    envData.add("HOCKEYAPP_CONFIG_URL_" + appIndex, configUrl);
 
                     String appId;
                     if (application.getNumberOldVersions() != null) {
@@ -474,7 +470,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     private ChangeLogSet<? extends Entry> getChangeLogSetFromRun(Run<?, ?> build) {
         ItemGroup<?> ig = build.getParent().getParent();
-        nextItem:
         for (Item item : ig.getItems()) {
             if (!item.getFullDisplayName().equals(build.getFullDisplayName())
                     && !item.getFullDisplayName().equals(build.getParent().getFullDisplayName())) {
@@ -562,9 +557,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         Collection<AbstractBuild<?, ?>> predicated = CollectionUtils.select(builds, new Predicate() {
             public boolean evaluate(Object o) {
                 Result r = ((AbstractBuild<?, ?>) o).getResult();
-                return r == null // no result yet
-                        ? false
-                        : r.isBetterOrEqualTo(Result.SUCCESS);
+                return r != null && r.isBetterOrEqualTo(Result.SUCCESS);
             }
         });
 
@@ -748,11 +741,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private String readReleaseNotesFile(File file) throws IOException {
-        FileInputStream inputStream = new FileInputStream(file);
-        try {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
             return IOUtils.toString(inputStream, "UTF-8");
-        } finally {
-            inputStream.close();
         }
     }
 
@@ -780,6 +770,5 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             return null;
         }
     }
-
 
 }
