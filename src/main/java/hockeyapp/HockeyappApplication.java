@@ -112,6 +112,18 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
             this.sortOldVersions = Util.fixEmptyAndTrim(sortOldVersions);
             this.strategyOldVersions = Util.fixEmptyAndTrim(strategyOldVersions);
         }
+
+        public String getNumberOldVersions() {
+            return numberOldVersions;
+        }
+
+        public String getSortOldVersions() {
+            return sortOldVersions;
+        }
+
+        public String getStrategyOldVersions() {
+            return strategyOldVersions;
+        }
     }
 
     @Extension

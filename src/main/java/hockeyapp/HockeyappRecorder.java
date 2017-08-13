@@ -639,6 +639,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             this.baseUrl = baseUrl;
         }
 
+        public String getBaseUrl() {
+            return baseUrl;
+        }
     }
 
     @Extension
