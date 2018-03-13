@@ -156,7 +156,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
             ProxyConfiguration configuration = Hudson.getInstance().proxy;
 
-            if (configuration.getUserName() != null && !configuration.getUserName().isEmpty()) {
+            if (configuration.getUserName() != null && !configuration.getUserName().isEmpty()
+                    && configuration.getPassword() != null && !configuration.getPassword().isEmpty()) {
                 Credentials credentials = new UsernamePasswordCredentials(configuration.getUserName(), configuration.getPassword());
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(new AuthScope(configuration.name, configuration.port), credentials);
