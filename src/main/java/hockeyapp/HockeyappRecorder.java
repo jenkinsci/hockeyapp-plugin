@@ -188,17 +188,22 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
                            BuildListener listener) {
         final Result buildResult = build.getResult();
-        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE))
+        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
             return false;
+        }
 
         boolean result = true;
         for (HockeyappApplication application : applications) {
+            final FilePath workspace = build.getWorkspace();
 
-            try {
-                result &= performForApplication(build, build.getWorkspace(), build.getEnvironment(listener), launcher, listener.getLogger(), application);
-
-            } catch (Exception e) {
-                e.printStackTrace(listener.getLogger());
+            if (workspace != null) {
+                try {
+                    result &= performForApplication(build, workspace, build.getEnvironment(listener), launcher, listener.getLogger(), application);
+                } catch (Exception e) {
+                    e.printStackTrace(listener.getLogger());
+                    return false;
+                }
+            } else {
                 return false;
             }
         }
