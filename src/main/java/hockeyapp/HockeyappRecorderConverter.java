@@ -43,9 +43,9 @@ public class HockeyappRecorderConverter implements Converter {
         HockeyappRecorderObsolete recorderObsolete = (HockeyappRecorderObsolete) context.convertAnother(
                 context.currentObject(), HockeyappRecorderObsolete.class);
 
-        HockeyappApplication application = new HockeyappApplication(recorderObsolete.apiToken, recorderObsolete.appId,
+        HockeyappApplication application = new HockeyappApplication(recorderObsolete.apiToken,
                 recorderObsolete.notifyTeam, recorderObsolete.filePath, recorderObsolete.dsymPath,
-                null, recorderObsolete.tags, recorderObsolete.teams, recorderObsolete.mandatory, 
+                null, recorderObsolete.tags, recorderObsolete.teams, recorderObsolete.mandatory,
                 recorderObsolete.downloadAllowed, recorderObsolete.oldVersionHolder,
                 recorderObsolete.releaseNotesMethod, recorderObsolete.uploadMethod);
         final List<HockeyappApplication> applications = Collections.singletonList(application);

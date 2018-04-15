@@ -1,5 +1,6 @@
 package hockeyapp;
 
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Describable;
@@ -27,6 +28,9 @@ import java.util.List;
 public class HockeyappApplication implements Describable<HockeyappApplication> {
     public static final long SCHEMA_VERSION_NUMBER = 1L;
 
+    @XStreamAsAttribute
+    public long schemaVersion;
+
     public String apiToken;
     public boolean notifyTeam;
     public String filePath;
@@ -41,11 +45,12 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     public RadioButtonSupport uploadMethod;
 
     @DataBoundConstructor
-    public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
+    public HockeyappApplication(String apiToken, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
                                 String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
+        this.schemaVersion = SCHEMA_VERSION_NUMBER;
         this.apiToken = Util.fixEmptyAndTrim(apiToken);
         this.notifyTeam = notifyTeam;
         this.filePath = Util.fixEmptyAndTrim(filePath);
