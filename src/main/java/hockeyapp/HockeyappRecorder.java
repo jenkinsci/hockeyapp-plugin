@@ -247,9 +247,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 String path = createPath(logger, vars, application);
                 URL host = createHostUrl(vars);
                 URL url = new URL(host, path);
-                if (url == null) {
-                    return this.failGracefully;
-                }
 
                 HttpClient httpclient = createPreconfiguredHttpClient();
 
