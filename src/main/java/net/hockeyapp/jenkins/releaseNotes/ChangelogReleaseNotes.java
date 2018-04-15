@@ -17,7 +17,8 @@ public class ChangelogReleaseNotes extends RadioButtonSupport {
     }
 
     public Descriptor<RadioButtonSupport> getDescriptor() {
-        return Jenkins.getInstance() == null ? null : Jenkins.getInstance().getDescriptorOrDie(this.getClass());
+        final Jenkins instance = Jenkins.getInstance();
+        return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
     @Extension

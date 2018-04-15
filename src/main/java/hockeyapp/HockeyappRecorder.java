@@ -14,6 +14,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.RunList;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
@@ -147,14 +148,15 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // note that this doesn't solve potential write timeouts
     // http://stackoverflow.com/questions/1338885/java-socket-output-stream-writes-do-they-block
     private HttpClient createPreconfiguredHttpClient() {
+        final Jenkins instance = Jenkins.getInstance();
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpParams params = httpclient.getParams();
         HttpConnectionParams.setConnectionTimeout(params, this.getDescriptor().getTimeoutInt());
         HttpConnectionParams.setSoTimeout(params, this.getDescriptor().getTimeoutInt());
         // Proxy setting
-        if (Hudson.getInstance() != null && Hudson.getInstance().proxy != null) {
+        if (instance != null && instance.proxy != null) {
 
-            ProxyConfiguration configuration = Hudson.getInstance().proxy;
+            ProxyConfiguration configuration = instance.proxy;
 
             if (configuration.getUserName() != null && !configuration.getUserName().isEmpty()) {
                 Credentials credentials = new UsernamePasswordCredentials(configuration.getUserName(), configuration.getPassword());
@@ -172,7 +174,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-        if (build.getResult() != null && build.getResult().isWorseOrEqualTo(Result.FAILURE))
+        final Result buildResult = build.getResult();
+        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE))
         {
             build.setResult(Result.FAILURE);
             return;
@@ -192,7 +195,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
                            BuildListener listener) {
-        if (build.getResult().isWorseOrEqualTo(Result.FAILURE))
+        final Result buildResult = build.getResult();
+        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE))
             return false;
 
         boolean result = true;

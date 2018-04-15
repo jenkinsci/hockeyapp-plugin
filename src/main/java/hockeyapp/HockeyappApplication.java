@@ -140,16 +140,22 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         @SuppressWarnings("unused")
         public FormValidation doCheckApiToken(@QueryParameter String value) throws IOException, ServletException {
             if (value.isEmpty()) {
-                HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor =
-                        (HockeyappRecorder.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
-                                HockeyappRecorder.class);
-                String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
-                if (defaultToken != null && defaultToken.length() > 0) {
-                    return FormValidation.warning("Default API Token is used.");
-                } else {
-                    return FormValidation.errorWithMarkup(
-                            "You must enter an <a href=\"https://rink.hockeyapp.net/manage/auth_tokens\">API Token</a>.");
+                final Jenkins instance = Jenkins.getInstance();
+
+                if (instance != null) {
+                    HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor =
+                            (HockeyappRecorder.DescriptorImpl) instance.getDescriptorOrDie(HockeyappRecorder.class);
+
+                    if (hockeyappRecorderDescriptor != null) {
+                        String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
+
+                        if (defaultToken != null && defaultToken.length() > 0) {
+                            return FormValidation.warning("Default API Token is used.");
+                        }
+                    }
                 }
+                return FormValidation.errorWithMarkup(
+                        "You must enter an <a href=\"https://rink.hockeyapp.net/manage/auth_tokens\">API Token</a>.");
             } else {
                 return FormValidation.ok();
             }
