@@ -45,6 +45,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -54,6 +55,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -381,7 +383,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     cleanupOldVersions(logger, vars, appId, host, application);
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException | URISyntaxException | InterruptedException | ParseException e) {
             e.printStackTrace(logger);
             return this.failGracefully;
         } finally {
