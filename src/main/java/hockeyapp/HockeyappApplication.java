@@ -1,6 +1,5 @@
 package hockeyapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Describable;
@@ -28,11 +27,7 @@ import java.util.List;
 public class HockeyappApplication implements Describable<HockeyappApplication> {
     public static final long SCHEMA_VERSION_NUMBER = 1L;
 
-    @XStreamAsAttribute
-    public long schemaVersion;
-
     public String apiToken;
-    public String appId;
     public boolean notifyTeam;
     public String filePath;
     public String dsymPath;
@@ -48,12 +43,10 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @DataBoundConstructor
     public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
-                                String tags, String teams, boolean mandatory, 
+                                String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
-        this.schemaVersion = SCHEMA_VERSION_NUMBER;
         this.apiToken = Util.fixEmptyAndTrim(apiToken);
-        this.appId = Util.fixEmptyAndTrim(appId);
         this.notifyTeam = notifyTeam;
         this.filePath = Util.fixEmptyAndTrim(filePath);
         this.dsymPath = Util.fixEmptyAndTrim(dsymPath);
@@ -146,7 +139,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckApiToken(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor =
                         (HockeyappRecorder.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
                                 HockeyappRecorder.class);
@@ -164,7 +157,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckNumberOldVersions(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must specify a positive Number.");
             } else {
                 try {
