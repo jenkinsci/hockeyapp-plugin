@@ -1,11 +1,7 @@
 package hockeyapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamConverter;
 import hudson.*;
-import hudson.Launcher;
 import hudson.model.*;
-import hudson.model.Queue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.BuildStepDescriptor;
@@ -24,6 +20,7 @@ import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -47,8 +44,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.apache.commons.collections.iterators.ArrayIterator;
-import org.apache.tools.ant.launch.*;
 import org.json.simple.parser.JSONParser;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -83,7 +78,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public BaseUrlHolder baseUrlHolder;
 
-    private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
+    private static final String UTF8 = "UTF-8";
+    private static final Charset UTF8_CHARSET = Charset.forName(UTF8);
 
     @DataBoundConstructor
     public HockeyappRecorder(List<HockeyappApplication> applications, boolean debugMode,
@@ -98,27 +94,23 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         this.failGracefully = failGracefully;
     }
 
-    List<HockeyappApplication> getApplications()
-    {
+    List<HockeyappApplication> getApplications() {
         return applications;
     }
 
-    boolean getDebugMode()
-    {
+    boolean getDebugMode() {
         return debugMode;
     }
 
-    String getBaseUrl()
-    {
+    String getBaseUrl() {
         return baseUrl;
     }
 
-    BaseUrlHolder getBaseUrlHolder()
-    {
+    BaseUrlHolder getBaseUrlHolder() {
         return baseUrlHolder;
     }
 
-    boolean getFailGracefully(){
+    boolean getFailGracefully() {
         return failGracefully;
     }
 
@@ -175,8 +167,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
         final Result buildResult = build.getResult();
-        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE))
-        {
+        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
             build.setResult(Result.FAILURE);
             return;
         }
@@ -186,9 +177,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         for (HockeyappApplication application : applications) {
             result &= performForApplication(build, filePath, build.getEnvironment(listener), launcher, listener.getLogger(), application);
         }
-        if(!result)
-        {
-           build.setResult(Result.FAILURE);
+        if (!result) {
+            build.setResult(Result.FAILURE);
         }
     }
 
@@ -409,6 +399,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return true;
 
     }
+
     private String createPath(PrintStream logger, EnvVars vars, HockeyappApplication application) {
         String path;
         if (application.uploadMethod instanceof VersionCreation) {
@@ -424,7 +415,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
         return path;
     }
-
 
 
     private void createReleaseNotes(Run<?, ?> build, FilePath workspace, MultipartEntity entity, PrintStream logger,
@@ -452,11 +442,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             StringBuilder sb = new StringBuilder();
 
             ChangeLogSet<? extends Entry> changeLogSet;
-            if(build instanceof AbstractBuild)
-            {
+            if (build instanceof AbstractBuild) {
                 changeLogSet = ((AbstractBuild) build).getChangeSet();
-            }else
-            {
+            } else {
                 changeLogSet = getChangeLogSetFromRun(build);
             }
             if (changeLogSet != null && !changeLogSet.isEmptySet()) {
@@ -476,8 +464,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     }
 
-    private ChangeLogSet<? extends Entry> getChangeLogSetFromRun(Run<?,?> build)
-    {
+    private ChangeLogSet<? extends Entry> getChangeLogSetFromRun(Run<?, ?> build) {
         ItemGroup<?> ig = build.getParent().getParent();
         nextItem:
         for (Item item : ig.getItems()) {
@@ -547,7 +534,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private static File getLocalFileFromFilePath(FilePath filePath, File tempDir) throws IOException, InterruptedException {
-        if(filePath.isRemote()) {
+        if (filePath.isRemote()) {
             FilePath localFilePath = new FilePath(new FilePath(tempDir), filePath.getName());
             filePath.copyTo(localFilePath);
             return new File(localFilePath.toURI());
@@ -594,7 +581,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                                        HockeyappApplication application) {
         try {
             HttpClient httpclient = createPreconfiguredHttpClient();
-            String path = "/api/2/apps/" + vars.expand(appId)+ "/app_versions/delete";
+            String path = "/api/2/apps/" + vars.expand(appId) + "/app_versions/delete";
             HttpPost httpPost = new HttpPost(new URL(host, path).toURI());
             httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
@@ -609,7 +596,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                 // Improved error handling.
                 if (response.getStatusLine().getStatusCode() != 200) {
-                    String responseBody = new Scanner(is).useDelimiter(
+                    String responseBody = new Scanner(is, UTF8).useDelimiter(
                             "\\A").next();
                     logger.println(
                             Messages.UNEXPECTED_RESPONSE_CODE(
@@ -621,7 +608,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                 JSONParser parser = new JSONParser();
                 final Map parsedMap = (Map) parser.parse(
-                        new BufferedReader(new InputStreamReader(is)));
+                        new BufferedReader(new InputStreamReader(is, UTF8_CHARSET)));
                 logger.println(
                         Messages.DELETED_OLD_VERSIONS(String.valueOf(
                                 parsedMap.get("total_entries")))
@@ -729,7 +716,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckBaseUrl(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must enter a URL.");
             } else {
                 return FormValidation.ok();
@@ -747,6 +734,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
 
     }
+
     private String readReleaseNotesFile(File file) throws IOException {
         FileInputStream inputStream = new FileInputStream(file);
         try {
