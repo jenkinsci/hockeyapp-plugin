@@ -1,134 +1,112 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <parent>
-    <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>1.609.2</version>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
 
-  <properties>
-    <jenkins.version>1.609.2</jenkins.version>
-    <java.level>7</java.level>
-    <jenkins-test-harness.version>2.13</jenkins-test-harness.version>
-  </properties>
+    <parent>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>plugin</artifactId>
+        <version>3.4</version>
+        <relativePath/>
+    </parent>
 
-  <artifactId>hockeyapp</artifactId>
-  <name>HockeyApp Plugin</name>
-  <description>Uploads iOS, Mac or Android apps to a HockeyApp server.</description>
-  <version>1.2.3-SNAPSHOT</version>
-  <packaging>hpi</packaging>
+    <groupId>io.jenkins.plugins</groupId>
 
- <licenses>
-     <license>
-         <name>MIT license</name>
-         <comments>All source code is under the MIT license.</comments>
-     </license>
- </licenses>
+    <artifactId>hockeyapp</artifactId>
 
-  <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
+    <version>1.2.3-SNAPSHOT</version>
 
-  <scm>
-    <connection>scm:git:ssh://github.com/jenkinsci/hockeyapp-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/hockeyapp-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/hockeyapp-plugin</url>
-    <tag>HEAD</tag>
-  </scm>
+    <packaging>hpi</packaging>
 
-  <distributionManagement>
-    <repository>
-      <id>maven.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>maven.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
+    <properties>
+        <jenkins.version>1.609.2</jenkins.version>
+        <java.level>7</java.level>
+        <jenkins-test-harness.version>2.13</jenkins-test-harness.version>
+    </properties>
 
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/HockeyApp+Plugin</url>
-  <developers>
-    <developer>
-      <id>ohoeltke</id>
-      <name>Oliver Hoeltke</name>
-      <email>ohoeltke@gmail.com</email>
-    </developer>
-    <developer>
-      <id>Brantone</id>
-      <name>Brenton Bartel</name>
-    </developer>
-  </developers>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.1</version>
-        <dependencies>
-          <dependency>
+    <name>HockeyApp Plugin</name>
+
+    <description>Uploads iOS, Mac or Android apps to a HockeyApp server.</description>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <comments>All source code is under the MIT license.</comments>
+        </license>
+    </licenses>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.0.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-api</artifactId>
+            <version>1.9.2</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.maven.scm</groupId>
             <artifactId>maven-scm-provider-gitexe</artifactId>
             <version>1.9.2</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.2</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-      <version>4.0.1</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.googlecode.json-simple</groupId>
-      <artifactId>json-simple</artifactId>
-      <version>1.1</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.6</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.scm</groupId>
-      <artifactId>maven-scm-api</artifactId>
-      <version>1.9.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven.scm</groupId>
-      <artifactId>maven-scm-provider-gitexe</artifactId>
-      <version>1.9.2</version>
-    </dependency>
-  </dependencies>
+        </dependency>
+    </dependencies>
+
+    <developers>
+        <developer>
+            <id>ohoeltke</id>
+            <name>Oliver Hoeltke</name>
+            <email>ohoeltke@gmail.com</email>
+        </developer>
+        <developer>
+            <id>Brantone</id>
+            <name>Brenton Bartel</name>
+        </developer>
+    </developers>
+
+
+    <url>http://wiki.jenkins-ci.org/display/JENKINS/HockeyApp+Plugin</url>
+
+    <scm>
+        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    </scm>
+
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
 </project>
