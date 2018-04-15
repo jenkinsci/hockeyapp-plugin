@@ -22,7 +22,7 @@
     <properties>
         <jenkins.version>1.609.2</jenkins.version>
         <java.level>7</java.level>
-        <jenkins-test-harness.version>2.13</jenkins-test-harness.version>
+        <jenkins-test-harness.version>2.38</jenkins-test-harness.version>
     </properties>
 
     <name>HockeyApp Plugin</name>
@@ -59,18 +59,24 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.6</version>
+            <version>1.9</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.scm</groupId>
             <artifactId>maven-scm-api</artifactId>
-            <version>1.9.2</version>
+            <version>1.9.5</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.scm</groupId>
             <artifactId>maven-scm-provider-gitexe</artifactId>
-            <version>1.9.2</version>
+            <version>1.9.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
