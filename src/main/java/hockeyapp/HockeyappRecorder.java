@@ -530,9 +530,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             FilePath remoteFile = new FilePath(workingDir, strFile);
             File file = new File(tempDir, remoteFile.getName());
             if (file.createNewFile()) {
-                FileOutputStream fos = new FileOutputStream(file);
-                remoteFile.copyTo(fos);
-                fos.close();
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    remoteFile.copyTo(fos);
+                }
                 return file;
             }
         }
