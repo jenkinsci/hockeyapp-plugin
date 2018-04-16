@@ -1,6 +1,7 @@
 package hockeyapp;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Describable;
@@ -28,10 +29,14 @@ import java.util.List;
 public class HockeyappApplication implements Describable<HockeyappApplication> {
     public static final long SCHEMA_VERSION_NUMBER = 1L;
 
+    @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
     @XStreamAsAttribute
-    public long schemaVersion;
+    public long schemaVersion; // TODO: Fix Findbugs gracefully.
 
     public String apiToken;
+
+    @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
+    public String appId; // TODO: Fix Findbugs gracefully.
     public boolean notifyTeam;
     public String filePath;
     public String dsymPath;
@@ -45,13 +50,14 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     public RadioButtonSupport uploadMethod;
 
     @DataBoundConstructor
-    public HockeyappApplication(String apiToken, boolean notifyTeam,
+    public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
                                 String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
         this.schemaVersion = SCHEMA_VERSION_NUMBER;
         this.apiToken = Util.fixEmptyAndTrim(apiToken);
+        this.appId = Util.fixEmptyAndTrim(appId);
         this.notifyTeam = notifyTeam;
         this.filePath = Util.fixEmptyAndTrim(filePath);
         this.dsymPath = Util.fixEmptyAndTrim(dsymPath);
