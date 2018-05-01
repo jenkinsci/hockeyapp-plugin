@@ -11,12 +11,8 @@
         <relativePath/>
     </parent>
 
-    <groupId>io.jenkins.plugins</groupId>
-
     <artifactId>hockeyapp</artifactId>
-
     <version>1.2.3-SNAPSHOT</version>
-
     <packaging>hpi</packaging>
 
     <properties>
