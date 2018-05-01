@@ -31,11 +31,13 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
 
     @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
     @XStreamAsAttribute
+    @Deprecated
     public long schemaVersion; // TODO: Fix Findbugs gracefully.
 
     public String apiToken;
 
     @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
+    @Deprecated
     public String appId; // TODO: Fix Findbugs gracefully.
     public boolean notifyTeam;
     public String filePath;
