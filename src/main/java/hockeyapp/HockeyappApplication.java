@@ -124,28 +124,24 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         @SuppressWarnings("unused")
         public List<RadioButtonSupportDescriptor> getReleaseNotesMethodList() {
             List<RadioButtonSupportDescriptor> releaseNotesMethods = new ArrayList<RadioButtonSupportDescriptor>(4);
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null) {
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(NoReleaseNotes.class));
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(ChangelogReleaseNotes.class));
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(FileReleaseNotes.class));
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(ManualReleaseNotes.class));
-            }
+            final Jenkins activeInstance = Jenkins.getActiveInstance();
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(NoReleaseNotes.class));
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(ChangelogReleaseNotes.class));
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(FileReleaseNotes.class));
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(ManualReleaseNotes.class));
             return releaseNotesMethods;
         }
 
         @SuppressWarnings("unused")
         public List<RadioButtonSupportDescriptor> getUploadMethodList() {
             List<RadioButtonSupportDescriptor> uploadMethods = new ArrayList<RadioButtonSupportDescriptor>(2);
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null) {
-                uploadMethods.add((RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(AppCreation.class));
-                uploadMethods.add((RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(VersionCreation.class));
-            }
+            Jenkins activeInstance = Jenkins.getActiveInstance();
+            uploadMethods.add((RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(AppCreation.class));
+            uploadMethods.add((RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(VersionCreation.class));
             return uploadMethods;
         }
 
@@ -153,18 +149,16 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         @SuppressWarnings("unused")
         public FormValidation doCheckApiToken(@QueryParameter String value) throws IOException, ServletException {
             if (value.isEmpty()) {
-                final Jenkins instance = Jenkins.getInstance();
+                final Jenkins activeInstance = Jenkins.getActiveInstance();
 
-                if (instance != null) {
-                    HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor =
-                            (HockeyappRecorder.DescriptorImpl) instance.getDescriptorOrDie(HockeyappRecorder.class);
+                HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor =
+                        (HockeyappRecorder.DescriptorImpl) activeInstance.getDescriptorOrDie(HockeyappRecorder.class);
 
-                    if (hockeyappRecorderDescriptor != null) {
-                        String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
+                if (hockeyappRecorderDescriptor != null) {
+                    String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
 
-                        if (defaultToken != null && defaultToken.length() > 0) {
-                            return FormValidation.warning("Default API Token is used.");
-                        }
+                    if (defaultToken != null && defaultToken.length() > 0) {
+                        return FormValidation.warning("Default API Token is used.");
                     }
                 }
                 return FormValidation.errorWithMarkup(
