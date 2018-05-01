@@ -58,6 +58,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
@@ -81,7 +82,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public BaseUrlHolder baseUrlHolder;
 
     private static final String UTF8 = "UTF-8";
-    private static final Charset UTF8_CHARSET = Charset.forName(UTF8);
+    private static final Charset UTF8_CHARSET = StandardCharsets.UTF_8;
 
     @DataBoundConstructor
     public HockeyappRecorder(List<HockeyappApplication> applications, boolean debugMode,
