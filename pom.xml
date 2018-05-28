@@ -76,7 +76,7 @@
     </developers>
 
 
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/HockeyApp+Plugin</url>
+    <url>https://wiki.jenkins.io/display/JENKINS/HockeyApp+Plugin</url>
 
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
