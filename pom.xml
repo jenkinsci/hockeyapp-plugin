@@ -73,6 +73,11 @@
             <id>Brantone</id>
             <name>Brenton Bartel</name>
         </developer>
+        <developer>
+            <id>mezpahlan</id>
+            <name>Mez Pahlan</name>
+            <email>mez.pahlan@gmail.com</email>
+        </developer>
     </developers>
 
 
