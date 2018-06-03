@@ -6,6 +6,7 @@ import jenkins.model.Jenkins;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -21,6 +22,7 @@ public class ChangelogReleaseNotes extends RadioButtonSupport {
         return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
+    @Symbol("changelogReleaseNotes")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<ChangelogReleaseNotes> {
 

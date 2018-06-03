@@ -44,6 +44,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.jenkinsci.Symbol;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -639,6 +640,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
     }
 
+    @Symbol("hockeyApp")
     @Extension
     // This indicates to Jenkins that this is an implementation of an extension
     // point.

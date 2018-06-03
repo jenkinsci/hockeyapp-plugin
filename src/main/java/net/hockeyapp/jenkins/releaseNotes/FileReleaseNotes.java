@@ -7,6 +7,7 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
@@ -45,6 +46,7 @@ public class FileReleaseNotes extends RadioButtonSupport {
         return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
+    @Symbol("fileReleaseNotes")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<FileReleaseNotes> {
 

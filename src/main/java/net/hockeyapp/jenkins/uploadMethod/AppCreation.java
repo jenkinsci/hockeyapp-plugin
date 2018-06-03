@@ -6,6 +6,7 @@ import jenkins.model.Jenkins;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
@@ -25,6 +26,7 @@ public class AppCreation extends RadioButtonSupport {
         return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
+    @Symbol("appCreation")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<AppCreation> {
 
