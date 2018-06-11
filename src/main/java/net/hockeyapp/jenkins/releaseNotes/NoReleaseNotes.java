@@ -22,7 +22,7 @@ public class NoReleaseNotes extends RadioButtonSupport {
         return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
-    @Symbol("noReleaseNotes")
+    @Symbol("none")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<NoReleaseNotes> {
 

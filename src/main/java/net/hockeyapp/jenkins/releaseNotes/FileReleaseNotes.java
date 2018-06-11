@@ -46,7 +46,7 @@ public class FileReleaseNotes extends RadioButtonSupport {
         return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
-    @Symbol("fileReleaseNotes")
+    @Symbol("file")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<FileReleaseNotes> {
 

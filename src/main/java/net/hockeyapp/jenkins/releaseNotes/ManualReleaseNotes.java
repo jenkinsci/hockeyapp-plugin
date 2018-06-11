@@ -47,7 +47,7 @@ public class ManualReleaseNotes extends RadioButtonSupport {
     }
 
 
-    @Symbol("manualReleaseNotes")
+    @Symbol("manual")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<ManualReleaseNotes> {
 
