@@ -115,4 +115,67 @@ public class FreestyleTest extends ProjectTest {
         failOnUnmatchedRequests();
     }
 
+    @Test
+    public void should_CreateConfigurationAction_When_BuildEndsInSuccess() throws Exception {
+        // Given
+        HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
+                .setLocalhostBaseUrl(mockHockeyAppServer.port())
+                .setApplications(Collections.singletonList(
+                        new HockeyappApplicationBuilder()
+                                .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
+                                .create()))
+                .create();
+        project.getPublishersList().add(hockeyappRecorder);
+
+        // When
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        // Then
+        assertBuildSuccessful(build);
+        assertConfigurationLinkActionIsCreated(build);
+        failOnUnmatchedRequests();
+    }
+
+    @Test
+    public void should_CreateInstallationAction_When_BuildEndsInSuccess() throws Exception {
+        // Given
+        HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
+                .setLocalhostBaseUrl(mockHockeyAppServer.port())
+                .setApplications(Collections.singletonList(
+                        new HockeyappApplicationBuilder()
+                                .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
+                                .create()))
+                .create();
+        project.getPublishersList().add(hockeyappRecorder);
+
+        // When
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        // Then
+        assertBuildSuccessful(build);
+        assertInstallationLinkActionIsCreated(build);
+        failOnUnmatchedRequests();
+    }
+
+    @Test
+    public void should_Not_CreateInstallationAction_When_APIKeyHasNoPermissionToRelease() throws Exception {
+        // Given
+        apiKeyHasNoUploadPermission();
+        HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
+                .setLocalhostBaseUrl(mockHockeyAppServer.port())
+                .setApplications(Collections.singletonList(
+                        new HockeyappApplicationBuilder()
+                                .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
+                                .create()))
+                .create();
+        project.getPublishersList().add(hockeyappRecorder);
+
+        // When
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        // Then
+        assertBuildSuccessful(build);
+        assertInstallationLinkActionIsNotCreated(build);
+        failOnUnmatchedRequests();
+    }
 }
