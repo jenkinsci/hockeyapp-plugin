@@ -36,7 +36,28 @@ public abstract class ProjectTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(201)
-                        .withBody("{\"id\": 3702837409, \"public URL\": \"foobar\", \"public_identifier\": \"" + APP_ID + "\" }")));
+                        .withBody("{\n" +
+                                "  \"title\": \"Android\",\n" +
+                                "  \"bundle_identifier\": \"net.hockeyapp.jenkins.android\",\n" +
+                                "  \"public_identifier\": \"" + APP_ID + "\",\n" +
+                                "  \"platform\": \"Android\",\n" +
+                                "  \"release_type\": 0,\n" +
+                                "  \"custom_release_type\": null,\n" +
+                                "  \"created_at\": \"2018-06-16T21:16:48Z\",\n" +
+                                "  \"updated_at\": \"2018-06-16T21:16:51Z\",\n" +
+                                "  \"featured\": false,\n" +
+                                "  \"role\": 0,\n" +
+                                "  \"id\": 788014,\n" +
+                                "  \"config_url\": \"https://rink.hockeyapp.net/manage/apps/bar/app_versions/1\",\n" +
+                                "  \"public_url\": \"https://rink.hockeyapp.net/apps/foo\",\n" +
+                                "  \"minimum_os_version\": \"5.0\",\n" +
+                                "  \"device_family\": null,\n" +
+                                "  \"status\": 2,\n" +
+                                "  \"visibility\": \"private\",\n" +
+                                "  \"owner\": \"Foo Bar Inc\",\n" +
+                                "  \"owner_token\": \"bar-baz\",\n" +
+                                "  \"retention_days\": \"90\"\n" +
+                                "}")));
         mockHockeyAppServer.stubFor(post(urlEqualTo(HOCKEY_APP_DELETE_URL))
                 .willReturn(aResponse()
                         .withStatus(204)));
