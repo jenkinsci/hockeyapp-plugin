@@ -1,9 +1,7 @@
 package hockeyapp;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
-import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import hudson.model.Run;
 import org.apache.commons.io.FileUtils;
@@ -27,8 +25,10 @@ public abstract class ProjectTest {
     static final String HOCKEY_APP_UPLOAD_URL = "/api/2/apps/upload";
     static final String HOCKEY_APP_DELETE_URL = "/api/2/apps/" + APP_ID + "/app_versions/delete";
 
-    @Rule public JenkinsRule jenkinsRule = new JenkinsRule();
-    @Rule public WireMockRule mockHockeyAppServer = new WireMockRule(options().dynamicPort());
+    @Rule
+    public JenkinsRule jenkinsRule = new JenkinsRule();
+    @Rule
+    public WireMockRule mockHockeyAppServer = new WireMockRule(options().dynamicPort());
 
     @Before
     public void before() throws Exception {
