@@ -335,21 +335,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     EnvAction envData = new EnvAction();
                     int appIndex = applications.indexOf(application);
 
-                    String publicUrl = (String) parsedMap.get("public_url");
-                    if (publicUrl != null) {
-                        String installUrl = publicUrl + "/app_versions/" + buildId;
-                        installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
-                        installAction.iconFileName = "package.gif";
-                        installAction.urlName = installUrl;
-                        build.addAction(installAction);
-
-                        if (appIndex == 0) {
-                            envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
-                        }
-
-                        envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
-                    }
-
                     HockeyappBuildAction configureAction = new HockeyappBuildAction();
                     String configUrl = (String) parsedMap.get("config_url");
                     configureAction.displayName = Messages.HOCKEYAPP_CONFIG_LINK();
@@ -362,6 +347,22 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     }
 
                     envData.add("HOCKEYAPP_CONFIG_URL_" + appIndex, configUrl);
+
+                    String publicUrl = (String) parsedMap.get("public_url");
+                    if (publicUrl != null) {
+                        final String appVersion = configUrl.substring(configUrl.indexOf("/app_versions/"));
+                        String installUrl = publicUrl + appVersion;
+                        installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
+                        installAction.iconFileName = "package.gif";
+                        installAction.urlName = installUrl;
+                        build.addAction(installAction);
+
+                        if (appIndex == 0) {
+                            envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
+                        }
+
+                        envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
+                    }
 
                     build.addAction(envData);
 
