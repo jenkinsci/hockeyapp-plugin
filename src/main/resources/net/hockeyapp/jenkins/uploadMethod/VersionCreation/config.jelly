@@ -4,4 +4,7 @@
     <f:entry title="${%App ID}" field="appId">
         <f:textbox checkUrl="'descriptorByName/net.hockeyapp.jenkins.uploadMethod.VersionCreation/checkAppId?value='+escape(this.value)"/>
     </f:entry>
+    <f:entry title="${%Version Code (Optional)}" field="versionCode">
+        <f:textbox checkUrl="'descriptorByName/net.hockeyapp.jenkins.uploadMethod.VersionCreation/checkVersionCode?value='+escape(this.value)"/>
+    </f:entry>
 </j:jelly>

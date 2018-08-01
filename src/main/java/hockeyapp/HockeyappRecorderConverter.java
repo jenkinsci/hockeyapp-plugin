@@ -107,7 +107,7 @@ public class HockeyappRecorderConverter implements Converter {
             appId = Util.fixEmptyAndTrim(appId);
             if (uploadMethod == null) {
                 if (useAppVersionURL && (appId != null)) {
-                    uploadMethod = new VersionCreation(appId);
+                    uploadMethod = new VersionCreation(appId, "");
                 } else {
                     uploadMethod = new AppCreation(false);
                 }
