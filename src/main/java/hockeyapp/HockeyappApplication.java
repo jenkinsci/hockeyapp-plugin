@@ -1,6 +1,7 @@
 package hockeyapp;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Describable;
@@ -28,11 +29,16 @@ import java.util.List;
 public class HockeyappApplication implements Describable<HockeyappApplication> {
     public static final long SCHEMA_VERSION_NUMBER = 1L;
 
+    @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
     @XStreamAsAttribute
-    public long schemaVersion;
+    @Deprecated
+    public long schemaVersion; // TODO: Fix Findbugs gracefully.
 
     public String apiToken;
-    public String appId;
+
+    @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
+    @Deprecated
+    public String appId; // TODO: Fix Findbugs gracefully.
     public boolean notifyTeam;
     public String filePath;
     public String dsymPath;
@@ -48,7 +54,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @DataBoundConstructor
     public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
-                                String tags, String teams, boolean mandatory, 
+                                String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
         this.schemaVersion = SCHEMA_VERSION_NUMBER;
@@ -106,6 +112,18 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
             this.sortOldVersions = Util.fixEmptyAndTrim(sortOldVersions);
             this.strategyOldVersions = Util.fixEmptyAndTrim(strategyOldVersions);
         }
+
+        public String getNumberOldVersions() {
+            return numberOldVersions;
+        }
+
+        public String getSortOldVersions() {
+            return sortOldVersions;
+        }
+
+        public String getStrategyOldVersions() {
+            return strategyOldVersions;
+        }
     }
 
     @Extension
@@ -118,45 +136,45 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         @SuppressWarnings("unused")
         public List<RadioButtonSupportDescriptor> getReleaseNotesMethodList() {
             List<RadioButtonSupportDescriptor> releaseNotesMethods = new ArrayList<RadioButtonSupportDescriptor>(4);
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null) {
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(NoReleaseNotes.class));
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(ChangelogReleaseNotes.class));
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(FileReleaseNotes.class));
-                releaseNotesMethods.add(
-                        (RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(ManualReleaseNotes.class));
-            }
+            final Jenkins activeInstance = Jenkins.getActiveInstance();
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(NoReleaseNotes.class));
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(ChangelogReleaseNotes.class));
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(FileReleaseNotes.class));
+            releaseNotesMethods.add(
+                    (RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(ManualReleaseNotes.class));
             return releaseNotesMethods;
         }
 
         @SuppressWarnings("unused")
         public List<RadioButtonSupportDescriptor> getUploadMethodList() {
             List<RadioButtonSupportDescriptor> uploadMethods = new ArrayList<RadioButtonSupportDescriptor>(2);
-            Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null) {
-                uploadMethods.add((RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(AppCreation.class));
-                uploadMethods.add((RadioButtonSupportDescriptor) jenkins.getDescriptorOrDie(VersionCreation.class));
-            }
+            Jenkins activeInstance = Jenkins.getActiveInstance();
+            uploadMethods.add((RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(AppCreation.class));
+            uploadMethods.add((RadioButtonSupportDescriptor) activeInstance.getDescriptorOrDie(VersionCreation.class));
             return uploadMethods;
         }
 
 
         @SuppressWarnings("unused")
         public FormValidation doCheckApiToken(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
+                final Jenkins activeInstance = Jenkins.getActiveInstance();
+
                 HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor =
-                        (HockeyappRecorder.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(
-                                HockeyappRecorder.class);
-                String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
-                if (defaultToken != null && defaultToken.length() > 0) {
-                    return FormValidation.warning("Default API Token is used.");
-                } else {
-                    return FormValidation.errorWithMarkup(
-                            "You must enter an <a href=\"https://rink.hockeyapp.net/manage/auth_tokens\">API Token</a>.");
+                        (HockeyappRecorder.DescriptorImpl) activeInstance.getDescriptorOrDie(HockeyappRecorder.class);
+
+                if (hockeyappRecorderDescriptor != null) {
+                    String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
+
+                    if (defaultToken != null && defaultToken.length() > 0) {
+                        return FormValidation.warning("Default API Token is used.");
+                    }
                 }
+                return FormValidation.errorWithMarkup(
+                        "You must enter an <a href=\"https://rink.hockeyapp.net/manage/auth_tokens\">API Token</a>.");
             } else {
                 return FormValidation.ok();
             }
@@ -164,7 +182,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckNumberOldVersions(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must specify a positive Number.");
             } else {
                 try {
@@ -189,4 +207,6 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
             }
         }
     }
+
+
 }
