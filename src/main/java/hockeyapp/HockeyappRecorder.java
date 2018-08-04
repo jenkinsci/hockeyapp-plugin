@@ -61,6 +61,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
@@ -142,15 +143,32 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // create an httpclient with some default settings, including socket timeouts
     // note that this doesn't solve potential write timeouts
     // http://stackoverflow.com/questions/1338885/java-socket-output-stream-writes-do-they-block
-    private HttpClient createPreconfiguredHttpClient() {
+    private HttpClient createPreconfiguredHttpClient(URL url, PrintStream logger) {
         final Jenkins instance = Jenkins.getInstance();
+
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpParams params = httpclient.getParams();
         HttpConnectionParams.setConnectionTimeout(params, this.getDescriptor().getTimeoutInt());
         HttpConnectionParams.setSoTimeout(params, this.getDescriptor().getTimeoutInt());
-        // Proxy setting
-        if (instance != null && instance.proxy != null) {
 
+        boolean hasProxy = instance != null && instance.proxy != null;
+
+        // ProxyConfig might have noproxy-exception for certain hosts
+        boolean useProxy = true;
+        String matchedPattern = null; // to log properly
+        if (hasProxy) {
+            List<Pattern> noProxyHostPatterns = instance.proxy.getNoProxyHostPatterns();
+            for (int i = 0; i < noProxyHostPatterns.size(); i++) {
+                Pattern noproxypattern = noProxyHostPatterns.get(i);
+                if (noproxypattern.matcher(url.getHost()).matches()) {
+                    useProxy = false;
+                    matchedPattern = noproxypattern.toString();
+                }
+            }
+        }
+
+        // Proxy setting, we have a Proxy _and_ the provided URL does not match any no-proxy-override
+        if (hasProxy && useProxy) {
             ProxyConfiguration configuration = instance.proxy;
 
             if (configuration.getUserName() != null && !configuration.getUserName().isEmpty()
@@ -163,6 +181,16 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
             HttpHost proxy = new HttpHost(configuration.name, configuration.port);
             httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+        }
+
+        // Logging output
+        logger.format("Proxy Settings: For the URL [%s] %n", url)
+                .format("  Found proxy configuration [%s] %n", hasProxy);
+        if (hasProxy) {
+            logger.format("  Used proxy configuration  [%s] %n", useProxy);
+            if (matchedPattern != null) {
+                logger.format("  Found matching Proxy exception rule [%s] %n", matchedPattern);
+            }
         }
 
         return httpclient;
@@ -245,7 +273,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     URL host = createHostUrl(vars);
                     URL url = new URL(host, path);
 
-                    HttpClient httpclient = createPreconfiguredHttpClient();
+                    HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
 
                     HttpPost httpPost = new HttpPost(url.toURI());
 
@@ -592,9 +620,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     private boolean cleanupOldVersions(PrintStream logger, EnvVars vars, String appId, URL host,
                                        HockeyappApplication application) {
         try {
-            HttpClient httpclient = createPreconfiguredHttpClient();
             String path = "/api/2/apps/" + vars.expand(appId) + "/app_versions/delete";
-            HttpPost httpPost = new HttpPost(new URL(host, path).toURI());
+            URL url = new URL(host, path);
+            HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
+            HttpPost httpPost = new HttpPost(url.toURI());
             httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
             nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
@@ -781,5 +810,4 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             return null;
         }
     }
-
 }
