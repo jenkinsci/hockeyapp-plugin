@@ -7,6 +7,7 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
@@ -41,9 +42,11 @@ public class FileReleaseNotes extends RadioButtonSupport {
     }
 
     public Descriptor<RadioButtonSupport> getDescriptor() {
-        return Jenkins.getInstance() == null ? null : Jenkins.getInstance().getDescriptorOrDie(this.getClass());
+        final Jenkins instance = Jenkins.getInstance();
+        return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
     }
 
+    @Symbol("file")
     @Extension
     public static class DescriptorImpl extends RadioButtonSupportDescriptor<FileReleaseNotes> {
 
@@ -59,7 +62,7 @@ public class FileReleaseNotes extends RadioButtonSupport {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckFileName(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must enter a File Name.");
             } else {
                 return FormValidation.ok();

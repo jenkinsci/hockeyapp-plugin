@@ -1,11 +1,7 @@
 package hockeyapp;
 
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamConverter;
 import hudson.*;
-import hudson.Launcher;
 import hudson.model.*;
-import hudson.model.Queue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.BuildStepDescriptor;
@@ -14,6 +10,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.RunList;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
@@ -23,6 +20,7 @@ import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -46,9 +44,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.apache.commons.collections.iterators.ArrayIterator;
-import org.apache.tools.ant.launch.*;
+import org.jenkinsci.Symbol;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -58,16 +56,18 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public static final long SCHEMA_VERSION_NUMBER = 2L;
     public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
     public static final int DEFAULT_TIMEOUT = 60000;
-
 
     @Exported
     public List<HockeyappApplication> applications;
@@ -82,7 +82,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public BaseUrlHolder baseUrlHolder;
 
-    private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
+    private static final String UTF8 = "UTF-8";
+    private static final Charset UTF8_CHARSET = StandardCharsets.UTF_8;
 
     @DataBoundConstructor
     public HockeyappRecorder(List<HockeyappApplication> applications, boolean debugMode,
@@ -97,27 +98,23 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         this.failGracefully = failGracefully;
     }
 
-    List<HockeyappApplication> getApplications()
-    {
+    List<HockeyappApplication> getApplications() {
         return applications;
     }
 
-    boolean getDebugMode()
-    {
+    boolean getDebugMode() {
         return debugMode;
     }
 
-    String getBaseUrl()
-    {
+    String getBaseUrl() {
         return baseUrl;
     }
 
-    BaseUrlHolder getBaseUrlHolder()
-    {
+    BaseUrlHolder getBaseUrlHolder() {
         return baseUrlHolder;
     }
 
-    boolean getFailGracefully(){
+    boolean getFailGracefully() {
         return failGracefully;
     }
 
@@ -146,27 +143,54 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // create an httpclient with some default settings, including socket timeouts
     // note that this doesn't solve potential write timeouts
     // http://stackoverflow.com/questions/1338885/java-socket-output-stream-writes-do-they-block
-    private HttpClient createPreconfiguredHttpClient() {
+    private HttpClient createPreconfiguredHttpClient(URL url, PrintStream logger) {
+        final Jenkins instance = Jenkins.getInstance();
+
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpParams params = httpclient.getParams();
         HttpConnectionParams.setConnectionTimeout(params, this.getDescriptor().getTimeoutInt());
         HttpConnectionParams.setSoTimeout(params, this.getDescriptor().getTimeoutInt());
-        // Proxy setting
-        if (Hudson.getInstance() != null && Hudson.getInstance().proxy != null) {
 
-            ProxyConfiguration configuration = Hudson.getInstance().proxy;
-            Credentials cred = null;
+        boolean hasProxy = instance != null && instance.proxy != null;
 
-            if (configuration.getUserName() != null && !configuration.getUserName().isEmpty()) {
-                cred = new UsernamePasswordCredentials(configuration.getUserName(), configuration.getPassword());
+        // ProxyConfig might have noproxy-exception for certain hosts
+        boolean useProxy = true;
+        String matchedPattern = null; // to log properly
+        if (hasProxy) {
+            List<Pattern> noProxyHostPatterns = instance.proxy.getNoProxyHostPatterns();
+            for (int i = 0; i < noProxyHostPatterns.size(); i++) {
+                Pattern noproxypattern = noProxyHostPatterns.get(i);
+                if (noproxypattern.matcher(url.getHost()).matches()) {
+                    useProxy = false;
+                    matchedPattern = noproxypattern.toString();
+                }
+            }
+        }
+
+        // Proxy setting, we have a Proxy _and_ the provided URL does not match any no-proxy-override
+        if (hasProxy && useProxy) {
+            ProxyConfiguration configuration = instance.proxy;
+
+            if (configuration.getUserName() != null && !configuration.getUserName().isEmpty()
+                    && configuration.getPassword() != null && !configuration.getPassword().isEmpty()) {
+                Credentials credentials = new UsernamePasswordCredentials(configuration.getUserName(), configuration.getPassword());
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(new AuthScope(configuration.name, configuration.port), credentials);
+                httpclient.getCredentialsProvider().setCredentials(new AuthScope(configuration.name, configuration.port), credentials);
             }
 
-            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(new AuthScope(configuration.name, configuration.port), cred);
-
-            httpclient.getCredentialsProvider().setCredentials(new AuthScope(configuration.name, configuration.port), cred);
             HttpHost proxy = new HttpHost(configuration.name, configuration.port);
             httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+        }
+
+        // Logging output
+        logger.format("Proxy Settings: For the URL [%s] %n", url)
+                .format("  Found proxy configuration [%s] %n", hasProxy);
+        if (hasProxy) {
+            logger.format("  Used proxy configuration  [%s] %n", useProxy);
+            if (matchedPattern != null) {
+                logger.format("  Found matching Proxy exception rule [%s] %n", matchedPattern);
+            }
         }
 
         return httpclient;
@@ -174,8 +198,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-        if (build.getResult() != null && build.getResult().isWorseOrEqualTo(Result.FAILURE))
-        {
+        final Result buildResult = build.getResult();
+        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
             build.setResult(Result.FAILURE);
             return;
         }
@@ -185,26 +209,31 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         for (HockeyappApplication application : applications) {
             result &= performForApplication(build, filePath, build.getEnvironment(listener), launcher, listener.getLogger(), application);
         }
-        if(!result)
-        {
-           build.setResult(Result.FAILURE);
+        if (!result) {
+            build.setResult(Result.FAILURE);
         }
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
                            BuildListener listener) {
-        if (build.getResult().isWorseOrEqualTo(Result.FAILURE))
+        final Result buildResult = build.getResult();
+        if (buildResult != null && buildResult.isWorseOrEqualTo(Result.FAILURE)) {
             return false;
+        }
 
         boolean result = true;
         for (HockeyappApplication application : applications) {
+            final FilePath workspace = build.getWorkspace();
 
-            try {
-                result &= performForApplication(build, build.getWorkspace(), build.getEnvironment(listener), launcher, listener.getLogger(), application);
-
-            } catch (Exception e) {
-                e.printStackTrace(listener.getLogger());
+            if (workspace != null) {
+                try {
+                    result &= performForApplication(build, workspace, build.getEnvironment(listener), launcher, listener.getLogger(), application);
+                } catch (Exception e) {
+                    e.printStackTrace(listener.getLogger());
+                    return false;
+                }
+            } else {
                 return false;
             }
         }
@@ -219,183 +248,184 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
             // Copy remote file to local file system.
             tempDir = File.createTempFile("jtf", null);
-            tempDir.delete();
-            tempDir.mkdirs();
-
-            FilePath remoteWorkspace = new FilePath(launcher.getChannel(), workspace.getRemote());
-            FilePath[] remoteFiles = remoteWorkspace.list(vars.expand(application.filePath));
-            if (remoteFiles.length == 0) {
-                logger.println("No IPA/APK found to upload in: " + vars.expand(application.filePath));
-                return this.failGracefully;
-            }
-
-            ArrayIterator remoteFilesIterator = new ArrayIterator(remoteFiles);
-            while (remoteFilesIterator.hasNext()) {
-                FilePath remoteFile = (FilePath) remoteFilesIterator.next();
-                File file = getLocalFileFromFilePath(remoteFile, tempDir);
-                logger.println(file);
-
-                float fileSize = file.length();
-
-                if (application.uploadMethod == null) {
-                    logger.println("No upload method specified!");
+            if (tempDir.delete() && tempDir.mkdirs()) {
+                FilePath remoteWorkspace = new FilePath(launcher.getChannel(), workspace.getRemote());
+                FilePath[] remoteFiles = remoteWorkspace.list(vars.expand(application.filePath));
+                if (remoteFiles.length == 0) {
+                    logger.println("No IPA/APK found to upload in: " + vars.expand(application.filePath));
                     return this.failGracefully;
                 }
 
-                String path = createPath(logger, vars, application);
-                URL host = createHostUrl(vars);
-                URL url = new URL(host, path);
-                if (url == null) {
-                    return this.failGracefully;
-                }
+                ArrayIterator remoteFilesIterator = new ArrayIterator(remoteFiles);
+                while (remoteFilesIterator.hasNext()) {
+                    FilePath remoteFile = (FilePath) remoteFilesIterator.next();
+                    File file = getLocalFileFromFilePath(remoteFile, tempDir);
+                    logger.println(file);
 
-                HttpClient httpclient = createPreconfiguredHttpClient();
+                    float fileSize = file.length();
 
-                HttpPost httpPost = new HttpPost(url.toURI());
-
-
-                FileBody fileBody = new FileBody(file);
-                httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
-                MultipartEntity entity = new MultipartEntity();
-
-                if (application.releaseNotesMethod != null) {
-                    createReleaseNotes(build, workspace, entity, logger, tempDir, vars, application);
-                }
-
-
-                entity.addPart("ipa", fileBody);
-
-                if (application.dsymPath != null && !vars.expand(application.dsymPath).isEmpty()) {
-                    FilePath remoteDsymFiles[] = remoteWorkspace.list(vars.expand(application.dsymPath));
-                    // Take the first one that matches the pattern
-                    if (remoteDsymFiles.length == 0) {
-                        logger.println("No dSYM found to upload in: " + vars.expand(application.dsymPath));
+                    if (application.uploadMethod == null) {
+                        logger.println("No upload method specified!");
                         return this.failGracefully;
                     }
-                    File dsymFile = getLocalFileFromFilePath(remoteDsymFiles[0], tempDir);
-                    logger.println(dsymFile);
-                    FileBody dsymFileBody = new FileBody(dsymFile);
-                    entity.addPart("dsym", dsymFileBody);
-                }
 
-                if (application.libsPath != null && !vars.expand(application.libsPath).isEmpty()) {
-                    FilePath remoteLibsFiles[] = remoteWorkspace.list(vars.expand(application.libsPath));
-                    // Take the first one that matches the pattern
-                    if (remoteLibsFiles.length == 0) {
-                        logger.println("No LIBS found to upload in: " + vars.expand(application.libsPath));
-                        return this.failGracefully;
+                    String path = createPath(logger, vars, application);
+                    URL host = createHostUrl(vars);
+                    URL url = new URL(host, path);
+
+                    HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
+
+                    HttpPost httpPost = new HttpPost(url.toURI());
+
+
+                    FileBody fileBody = new FileBody(file);
+                    httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+                    MultipartEntity entity = new MultipartEntity();
+
+                    if (application.releaseNotesMethod != null) {
+                        createReleaseNotes(build, workspace, entity, logger, tempDir, vars, application);
                     }
-                    File libsFile = getLocalFileFromFilePath(remoteLibsFiles[0], tempDir);
-                    logger.println(libsFile);
-                    FileBody libsFileBody = new FileBody(libsFile);
-                    entity.addPart("libs", libsFileBody);
-                }
-
-                if (application.tags != null && !vars.expand(application.tags).isEmpty() && application.tags.length() > 0)
-                    entity.addPart("tags", new StringBody(vars.expand(application.tags)));
-
-                entity.addPart("mandatory", new StringBody(application.mandatory ? "1" : "0"));
-
-                if (application.teams != null && !vars.expand(application.teams).isEmpty() && application.teams.length() > 0)
-                    entity.addPart("teams", new StringBody(vars.expand(application.teams)));
-
-                entity.addPart("notify", new StringBody(application.notifyTeam ? "1" : "0"));
-                entity.addPart("status", new StringBody(application.downloadAllowed ? "2" : "1"));
-                if (application.uploadMethod instanceof AppCreation) {
-                    AppCreation appCreation = (AppCreation) application.uploadMethod;
-                    entity.addPart("private", new StringBody(appCreation.publicPage ? "false" : "true"));
-                }
-                httpPost.setEntity(entity);
-
-                long startTime = System.currentTimeMillis();
-                HttpResponse response = httpclient.execute(httpPost);
-                long duration = System.currentTimeMillis() - startTime;
-
-                printUploadSpeed(duration, fileSize, logger);
-
-                HttpEntity resEntity = response.getEntity();
-
-                InputStream is = resEntity.getContent();
-
-                String responseBody = IOUtils.toString(is);
-                // Improved error handling.
-                if (response.getStatusLine().getStatusCode() != 201) {
-                    logger.println(
-                            Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
-                    logger.println(responseBody);
-                    return this.failGracefully;
-                } else if (isDebugEnabled()) { // DEBUG MODE output
-                    logger.println("RESPONSE: " + responseBody);
-                }
-
-                JSONParser parser = new JSONParser();
-
-                final Map parsedMap = (Map) parser.parse(responseBody);
 
 
-                String buildId = Long.toString((Long) parsedMap.get("id"));
+                    entity.addPart("ipa", fileBody);
 
-                HockeyappBuildAction installAction = new HockeyappBuildAction();
-                String installUrl = (String) parsedMap.get("public_url") +
-                        "/app_versions/" + buildId;
-                installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
-                installAction.iconFileName = "package.gif";
-                installAction.urlName = installUrl;
-                build.addAction(installAction);
+                    if (application.dsymPath != null && !vars.expand(application.dsymPath).isEmpty()) {
+                        FilePath remoteDsymFiles[] = remoteWorkspace.list(vars.expand(application.dsymPath));
+                        // Take the first one that matches the pattern
+                        if (remoteDsymFiles.length == 0) {
+                            logger.println("No dSYM found to upload in: " + vars.expand(application.dsymPath));
+                            return this.failGracefully;
+                        }
+                        File dsymFile = getLocalFileFromFilePath(remoteDsymFiles[0], tempDir);
+                        logger.println(dsymFile);
+                        FileBody dsymFileBody = new FileBody(dsymFile);
+                        entity.addPart("dsym", dsymFileBody);
+                    }
 
-                HockeyappBuildAction configureAction = new HockeyappBuildAction();
-                String configUrl = (String) parsedMap.get("config_url");
-                configureAction.displayName = Messages.HOCKEYAPP_CONFIG_LINK();
-                configureAction.iconFileName = "gear2.gif";
-                configureAction.urlName = configUrl;
-                build.addAction(configureAction);
+                    if (application.libsPath != null && !vars.expand(application.libsPath).isEmpty()) {
+                        FilePath remoteLibsFiles[] = remoteWorkspace.list(vars.expand(application.libsPath));
+                        // Take the first one that matches the pattern
+                        if (remoteLibsFiles.length == 0) {
+                            logger.println("No LIBS found to upload in: " + vars.expand(application.libsPath));
+                            return this.failGracefully;
+                        }
+                        File libsFile = getLocalFileFromFilePath(remoteLibsFiles[0], tempDir);
+                        logger.println(libsFile);
+                        FileBody libsFileBody = new FileBody(libsFile);
+                        entity.addPart("libs", libsFileBody);
+                    }
 
-                int appIndex = applications.indexOf(application);
+                    if (application.tags != null && !vars.expand(application.tags).isEmpty() && application.tags.length() > 0)
+                        entity.addPart("tags", new StringBody(vars.expand(application.tags)));
 
-                logger.println("HOCKEYAPP_INSTALL_URL" + installUrl);
-                logger.println("HOCKEYAPP_CONFIG_URL" + configUrl);
+                    entity.addPart("mandatory", new StringBody(application.mandatory ? "1" : "0"));
 
-                EnvAction envData = new EnvAction();
-                build.addAction(envData);
+                    if (application.teams != null && !vars.expand(application.teams).isEmpty() && application.teams.length() > 0)
+                        entity.addPart("teams", new StringBody(vars.expand(application.teams)));
 
-                if (envData != null) {
+                    entity.addPart("notify", new StringBody(application.notifyTeam ? "1" : "0"));
+                    entity.addPart("status", new StringBody(application.downloadAllowed ? "2" : "1"));
+                    if (application.uploadMethod instanceof AppCreation) {
+                        AppCreation appCreation = (AppCreation) application.uploadMethod;
+                        entity.addPart("private", new StringBody(appCreation.publicPage ? "false" : "true"));
+                    }
+                    httpPost.setEntity(entity);
+
+                    long startTime = System.currentTimeMillis();
+                    HttpResponse response = httpclient.execute(httpPost);
+                    long duration = System.currentTimeMillis() - startTime;
+
+                    printUploadSpeed(duration, fileSize, logger);
+
+                    HttpEntity resEntity = response.getEntity();
+
+                    InputStream is = resEntity.getContent();
+
+                    String responseBody = IOUtils.toString(is);
+                    // Improved error handling.
+                    if (response.getStatusLine().getStatusCode() != 201) {
+                        logger.println(
+                                Messages.UNEXPECTED_RESPONSE_CODE(response.getStatusLine().getStatusCode()));
+                        logger.println(responseBody);
+                        return this.failGracefully;
+                    } else if (isDebugEnabled()) { // DEBUG MODE output
+                        logger.println("RESPONSE: " + responseBody);
+                    }
+
+                    JSONParser parser = new JSONParser();
+
+                    final Map parsedMap = (Map) parser.parse(responseBody);
+
+
+                    String buildId = Long.toString((Long) parsedMap.get("id"));
+
+                    HockeyappBuildAction installAction = new HockeyappBuildAction();
+                    EnvAction envData = new EnvAction();
+                    int appIndex = applications.indexOf(application);
+
+                    HockeyappBuildAction configureAction = new HockeyappBuildAction();
+                    String configUrl = (String) parsedMap.get("config_url");
+                    configureAction.displayName = Messages.HOCKEYAPP_CONFIG_LINK();
+                    configureAction.iconFileName = "gear2.gif";
+                    configureAction.urlName = configUrl;
+                    build.addAction(configureAction);
 
                     if (appIndex == 0) {
-                        envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
                         envData.add("HOCKEYAPP_CONFIG_URL", configUrl);
+                        logger.println("HOCKEYAPP_CONFIG_URL" + configUrl);
                     }
 
-                    envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
                     envData.add("HOCKEYAPP_CONFIG_URL_" + appIndex, configUrl);
-                }
+                    logger.println("HOCKEYAPP_CONFIG_URL_" + appIndex + ": " + configUrl);
 
-                String appId;
-                if (application.getNumberOldVersions() != null) {
-                    if (application.uploadMethod instanceof VersionCreation) {
-                        appId = vars.expand(((VersionCreation) application.uploadMethod).getAppId());
-                    } else {
-                        //load App ID from reponse
-                        appId = (String) parsedMap.get("public_identifier");
+                    String publicUrl = (String) parsedMap.get("public_url");
+                    if (publicUrl != null) {
+                        final String appVersion = configUrl.substring(configUrl.indexOf("/app_versions/"));
+                        String installUrl = publicUrl + appVersion;
+                        installAction.displayName = Messages.HOCKEYAPP_INSTALL_LINK();
+                        installAction.iconFileName = "package.gif";
+                        installAction.urlName = installUrl;
+                        build.addAction(installAction);
+
+                        if (appIndex == 0) {
+                            envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
+                            logger.println("HOCKEYAPP_INSTALL_URL" + installUrl);
+                        }
+
+                        envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
+                        logger.println("HOCKEYAPP_INSTALL_URL_" + appIndex + ": " + installUrl);
                     }
-                    if (appId == null) {
-                        logger.println(Messages.APP_ID_MISSING_FOR_CLEANUP());
-                        logger.println(Messages.ABORTING_CLEANUP());
-                        return this.failGracefully;
+
+                    build.addAction(envData);
+
+                    String appId;
+                    if (application.getNumberOldVersions() != null) {
+                        if (application.uploadMethod instanceof VersionCreation) {
+                            appId = vars.expand(((VersionCreation) application.uploadMethod).getAppId());
+                        } else {
+                            //load App ID from reponse
+                            appId = (String) parsedMap.get("public_identifier");
+                        }
+                        if (appId == null) {
+                            logger.println(Messages.APP_ID_MISSING_FOR_CLEANUP());
+                            logger.println(Messages.ABORTING_CLEANUP());
+                            return this.failGracefully;
+                        }
+                        if (application.getNumberOldVersions() == null || !StringUtils.isNumeric(application.getNumberOldVersions())) {
+                            logger.println(Messages.COUNT_MISSING_FOR_CLEANUP());
+                            logger.println(Messages.ABORTING_CLEANUP());
+                            return this.failGracefully;
+                        }
+                        if (Integer.parseInt(application.getNumberOldVersions()) < 1) {
+                            logger.println(Messages.TOO_FEW_VERSIONS_RETAINED());
+                            logger.println(Messages.ABORTING_CLEANUP());
+                            return this.failGracefully;
+                        }
+                        cleanupOldVersions(logger, vars, appId, host, application);
                     }
-                    if (application.getNumberOldVersions() == null || !StringUtils.isNumeric(application.getNumberOldVersions())) {
-                        logger.println(Messages.COUNT_MISSING_FOR_CLEANUP());
-                        logger.println(Messages.ABORTING_CLEANUP());
-                        return this.failGracefully;
-                    }
-                    if (Integer.parseInt(application.getNumberOldVersions()) < 1) {
-                        logger.println(Messages.TOO_FEW_VERSIONS_RETAINED());
-                        logger.println(Messages.ABORTING_CLEANUP());
-                        return this.failGracefully;
-                    }
-                    cleanupOldVersions(logger, vars, appId, host, application);
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException | URISyntaxException | InterruptedException | ParseException e) {
             e.printStackTrace(logger);
             return this.failGracefully;
         } finally {
@@ -413,6 +443,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return true;
 
     }
+
     private String createPath(PrintStream logger, EnvVars vars, HockeyappApplication application) {
         String path;
         if (application.uploadMethod instanceof VersionCreation) {
@@ -428,7 +459,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
         return path;
     }
-
 
 
     private void createReleaseNotes(Run<?, ?> build, FilePath workspace, MultipartEntity entity, PrintStream logger,
@@ -456,11 +486,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             StringBuilder sb = new StringBuilder();
 
             ChangeLogSet<? extends Entry> changeLogSet;
-            if(build instanceof AbstractBuild)
-            {
+            if (build instanceof AbstractBuild) {
                 changeLogSet = ((AbstractBuild) build).getChangeSet();
-            }else
-            {
+            } else {
                 changeLogSet = getChangeLogSetFromRun(build);
             }
             if (changeLogSet != null && !changeLogSet.isEmptySet()) {
@@ -480,10 +508,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     }
 
-    private ChangeLogSet<? extends Entry> getChangeLogSetFromRun(Run<?,?> build)
-    {
+    private ChangeLogSet<? extends Entry> getChangeLogSetFromRun(Run<?, ?> build) {
         ItemGroup<?> ig = build.getParent().getParent();
-        nextItem:
         for (Item item : ig.getItems()) {
             if (!item.getFullDisplayName().equals(build.getFullDisplayName())
                     && !item.getFullDisplayName().equals(build.getParent().getFullDisplayName())) {
@@ -540,18 +566,19 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         if (workingDir.isRemote()) {
             FilePath remoteFile = new FilePath(workingDir, strFile);
             File file = new File(tempDir, remoteFile.getName());
-            file.createNewFile();
-            FileOutputStream fos = new FileOutputStream(file);
-            remoteFile.copyTo(fos);
-            fos.close();
-            return file;
+            if (file.createNewFile()) {
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    remoteFile.copyTo(fos);
+                }
+                return file;
+            }
         }
 
         return new File(workingDir.getRemote(), strFile);
     }
 
     private static File getLocalFileFromFilePath(FilePath filePath, File tempDir) throws IOException, InterruptedException {
-        if(filePath.isRemote()) {
+        if (filePath.isRemote()) {
             FilePath localFilePath = new FilePath(new FilePath(tempDir), filePath.getName());
             filePath.copyTo(localFilePath);
             return new File(localFilePath.toURI());
@@ -597,9 +624,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     private boolean cleanupOldVersions(PrintStream logger, EnvVars vars, String appId, URL host,
                                        HockeyappApplication application) {
         try {
-            HttpClient httpclient = createPreconfiguredHttpClient();
-            String path = "/api/2/apps/" + vars.expand(appId)+ "/app_versions/delete";
-            HttpPost httpPost = new HttpPost(new URL(host, path).toURI());
+            String path = "/api/2/apps/" + vars.expand(appId) + "/app_versions/delete";
+            URL url = new URL(host, path);
+            HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
+            HttpPost httpPost = new HttpPost(url.toURI());
             httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
             nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
@@ -613,7 +641,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                 // Improved error handling.
                 if (response.getStatusLine().getStatusCode() != 200) {
-                    String responseBody = new Scanner(is).useDelimiter(
+                    String responseBody = new Scanner(is, UTF8).useDelimiter(
                             "\\A").next();
                     logger.println(
                             Messages.UNEXPECTED_RESPONSE_CODE(
@@ -625,7 +653,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                 JSONParser parser = new JSONParser();
                 final Map parsedMap = (Map) parser.parse(
-                        new BufferedReader(new InputStreamReader(is)));
+                        new BufferedReader(new InputStreamReader(is, UTF8_CHARSET)));
                 logger.println(
                         Messages.DELETED_OLD_VERSIONS(String.valueOf(
                                 parsedMap.get("total_entries")))
@@ -647,8 +675,12 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             this.baseUrl = baseUrl;
         }
 
+        public String getBaseUrl() {
+            return baseUrl;
+        }
     }
 
+    @Symbol("hockeyApp")
     @Extension
     // This indicates to Jenkins that this is an implementation of an extension
     // point.
@@ -733,7 +765,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckBaseUrl(@QueryParameter String value) throws IOException, ServletException {
-            if(value.isEmpty()) {
+            if (value.isEmpty()) {
                 return FormValidation.error("You must enter a URL.");
             } else {
                 return FormValidation.ok();
@@ -751,12 +783,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
 
     }
+
     private String readReleaseNotesFile(File file) throws IOException {
-        FileInputStream inputStream = new FileInputStream(file);
-        try {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
             return IOUtils.toString(inputStream, "UTF-8");
-        } finally {
-            inputStream.close();
         }
     }
 
@@ -784,6 +814,4 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             return null;
         }
     }
-
-
 }
