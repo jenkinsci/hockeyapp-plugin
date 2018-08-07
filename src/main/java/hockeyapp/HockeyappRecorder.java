@@ -278,7 +278,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                     HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
 
-                    HttpEntityEnclosingRequestBase httpRequest = info.getMethod() == HttpMethod.PUT
+                    HttpEntityEnclosingRequestBase httpRequest = info.getMethod().equals(HttpPut.METHOD_NAME)
                             ? new HttpPut(url.toURI())
                             : new HttpPost(url.toURI());
 
@@ -452,7 +452,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 info.setPath("/api/2/apps/" + vars.expand(versionCreation.getAppId()) + "/app_versions/");
                 if (versionCreation.getVersionCode() != null && !vars.expand(versionCreation.getVersionCode()).isEmpty()) {
                     info.setPath(info.getPath() + vars.expand(versionCreation.getVersionCode()));
-                    info.setMethod(HttpMethod.PUT);
+                    info.setMethod(HttpPut.METHOD_NAME);
                 } else {
                     info.setPath(info.getPath() + "upload");
                 }
@@ -672,10 +672,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return true;
     }
 
-    public enum HttpMethod {
-        POST, PUT
-    }
-
     public static class BaseUrlHolder {
 
         private String baseUrl;
@@ -822,30 +818,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
         public String getUrlName() {
             return null;
-        }
-    }
-
-    private static class HttpInfo {
-        private String path;
-        private HttpMethod method = HttpMethod.POST;
-
-        HttpInfo() {
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        public HttpMethod getMethod() {
-            return method;
-        }
-
-        public void setMethod(HttpMethod method) {
-            this.method = method;
         }
     }
 
