@@ -23,6 +23,11 @@ public class VersionCreation extends RadioButtonSupport {
     @Exported
     private String versionCode;
 
+    @Deprecated
+    public VersionCreation(String appId) {
+        this(appId, null);
+    }
+
     @DataBoundConstructor
     public VersionCreation(String appId, String versionCode) {
         this.appId = Util.fixEmptyAndTrim(appId);
