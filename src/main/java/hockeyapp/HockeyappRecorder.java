@@ -808,6 +808,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             if (data != null) env.putAll(data);
         }
 
+        public void buildEnvironment(@Nonnull Run<?, ?> build, @Nonnull EnvVars env) {
+            if (data != null) env.putAll(data);
+        }
+
         public String getIconFileName() {
             return null;
         }
