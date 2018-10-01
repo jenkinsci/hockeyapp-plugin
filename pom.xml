@@ -21,7 +21,7 @@
 
     <name>HockeyApp Plugin</name>
 
-    <description>Uploads iOS, Mac or Android apps to a HockeyApp server.</description>
+    <description>Uploads Android, iOS, or Mac apps to a HockeyApp server.</description>
 
     <licenses>
         <license>
