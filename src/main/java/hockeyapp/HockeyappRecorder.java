@@ -497,11 +497,12 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             if (build instanceof AbstractBuild) {
                 changeLogSet = ((AbstractBuild) build).getChangeSet();
             } else if (build instanceof WorkflowRun) {
-				//to support multibranch pipelines
-                changeLogSet = ((WorkflowRun)build).getChangeSets().get(0);
+		//to support multibranch pipelines
+                List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeLogSetList = ((WorkflowRun)build).getChangeSets();
+		changeLogSet = changeLogSetList.isEmpty() ? null : changeLogSetList.get(0);
             } else {
                 changeLogSet = getChangeLogSetFromRun(build);
-			}
+	    }
             if (changeLogSet != null && !changeLogSet.isEmptySet()) {
                 boolean hasManyChangeSets = changeLogSet.getItems().length > 1;
                 for (Entry entry : changeLogSet) {
