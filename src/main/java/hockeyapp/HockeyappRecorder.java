@@ -376,7 +376,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                     if (appIndex == 0) {
                         envData.add("HOCKEYAPP_CONFIG_URL", configUrl);
-                        logger.println("HOCKEYAPP_CONFIG_URL" + configUrl);
+                        logger.println("HOCKEYAPP_CONFIG_URL: " + configUrl);
                     }
 
                     envData.add("HOCKEYAPP_CONFIG_URL_" + appIndex, configUrl);
@@ -393,7 +393,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                         if (appIndex == 0) {
                             envData.add("HOCKEYAPP_INSTALL_URL", installUrl);
-                            logger.println("HOCKEYAPP_INSTALL_URL" + installUrl);
+                            logger.println("HOCKEYAPP_INSTALL_URL: " + installUrl);
                         }
 
                         envData.add("HOCKEYAPP_INSTALL_URL_" + appIndex, installUrl);
