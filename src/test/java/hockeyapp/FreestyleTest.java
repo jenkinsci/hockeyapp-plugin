@@ -8,6 +8,7 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
+import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestBuilder;
@@ -176,6 +177,32 @@ public class FreestyleTest extends ProjectTest {
         // Then
         assertBuildSuccessful(build);
         assertInstallationLinkActionIsNotCreated(build);
+        failOnUnmatchedRequests();
+    }
+
+    @Test
+    public void testFreeStyleBuildWithSameVersion() throws Exception {
+        // Given
+        HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
+                .setLocalhostBaseUrl(mockHockeyAppServer.port())
+                .setApplications(Collections.singletonList(
+                        new HockeyappApplicationBuilder()
+                                .setUploadMethod(new VersionCreation(APP_ID, "1"))
+                                .create()))
+                .create();
+        project.getPublishersList().add(hockeyappRecorder);
+
+        // When
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        // Then
+        assertBuildSuccessful(build);
+        mockHockeyAppServer.verify(1, putRequestedFor(urlEqualTo(HOCKEY_APP_VERSION_UPLOAD_URL))
+                .withHeader("Content-Type", containing("multipart/form-data;"))
+                .withRequestBody(ipaFormData())
+                .withRequestBody(mandatoryFormData(0))
+                .withRequestBody(notifyFormData(0))
+                .withRequestBody(statusFormData(1)));
         failOnUnmatchedRequests();
     }
 }

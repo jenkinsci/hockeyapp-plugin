@@ -20,13 +20,26 @@ public class VersionCreation extends RadioButtonSupport {
     @Exported
     private String appId;
 
-    @DataBoundConstructor
+    @Exported
+    private String versionCode;
+
+    @Deprecated
     public VersionCreation(String appId) {
+        this(appId, null);
+    }
+
+    @DataBoundConstructor
+    public VersionCreation(String appId, String versionCode) {
         this.appId = Util.fixEmptyAndTrim(appId);
+        this.versionCode = Util.fixEmptyAndTrim(versionCode);
     }
 
     public String getAppId() {
         return appId;
+    }
+
+    public String getVersionCode() {
+        return versionCode;
     }
 
     public Descriptor<RadioButtonSupport> getDescriptor() {
@@ -67,6 +80,15 @@ public class VersionCreation extends RadioButtonSupport {
                 return FormValidation.ok();
             }
 
+        }
+
+        @SuppressWarnings("unused")
+        public FormValidation doCheckVersionCode(@QueryParameter String value) throws IOException, ServletException {
+            if (value.matches("[0-9]*") || value.equals("")) {
+                return FormValidation.ok();
+            } else {
+                return FormValidation.warning("Version code should be an integer value >0.");
+            }
         }
     }
 
