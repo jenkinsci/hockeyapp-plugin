@@ -65,6 +65,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public static final long SCHEMA_VERSION_NUMBER = 2L;
@@ -494,9 +496,12 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             ChangeLogSet<? extends Entry> changeLogSet;
             if (build instanceof AbstractBuild) {
                 changeLogSet = ((AbstractBuild) build).getChangeSet();
+            } else if (build instanceof WorkflowRun) {
+				//to support multibranch pipelines
+                changeLogSet = ((WorkflowRun)build).getChangeSets().get(0);
             } else {
                 changeLogSet = getChangeLogSetFromRun(build);
-            }
+			}
             if (changeLogSet != null && !changeLogSet.isEmptySet()) {
                 boolean hasManyChangeSets = changeLogSet.getItems().length > 1;
                 for (Entry entry : changeLogSet) {
