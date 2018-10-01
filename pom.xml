@@ -143,18 +143,18 @@
 
     <developers>
         <developer>
-            <id>ohoeltke</id>
-            <name>Oliver Hoeltke</name>
-            <email>ohoeltke@gmail.com</email>
+            <id>mezpahlan</id>
+            <name>Mez Pahlan</name>
+            <email>mez.pahlan@gmail.com</email>
         </developer>
         <developer>
             <id>Brantone</id>
             <name>Brenton Bartel</name>
         </developer>
         <developer>
-            <id>mezpahlan</id>
-            <name>Mez Pahlan</name>
-            <email>mez.pahlan@gmail.com</email>
+            <id>ohoeltke</id>
+            <name>Oliver Hoeltke</name>
+            <email>ohoeltke@gmail.com</email>
         </developer>
     </developers>
 
