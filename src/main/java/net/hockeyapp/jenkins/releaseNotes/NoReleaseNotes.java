@@ -19,7 +19,7 @@ public class NoReleaseNotes extends RadioButtonSupport {
 
     public Descriptor<RadioButtonSupport> getDescriptor() {
         final Jenkins instance = Jenkins.getInstance();
-        return instance == null ? null : instance.getDescriptorOrDie(this.getClass());
+        return instance.getDescriptorOrDie(this.getClass());
     }
 
     @Symbol("none")
