@@ -65,18 +65,7 @@ public class VersionCreation extends RadioButtonSupport {
         }
 
         @SuppressWarnings("unused")
-        public FormValidation doCheckAppId(@QueryParameter String value) throws IOException, ServletException {
-//            if(value.isEmpty()) {
-//                return FormValidation.error("You must enter an App ID.");
-//            } else if(value.length() != 32) {
-//                return FormValidation.error("App ID length must be 32.");
-//            } else {
-//                if (value.matches("[0-9A-Fa-f]{32}")) {
-//                    return FormValidation.ok();
-//                } else {
-//                    return FormValidation.warning("Check correctness of App ID.");
-//                }
-//            }
+        public FormValidation doCheckAppId(@QueryParameter String value) {
             if (value.isEmpty()) {
                 return FormValidation.error("You must enter an App ID.");
             } else {
@@ -86,7 +75,7 @@ public class VersionCreation extends RadioButtonSupport {
         }
 
         @SuppressWarnings("unused")
-        public FormValidation doCheckVersionCode(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckVersionCode(@QueryParameter String value) {
             if (value.matches("[0-9]*") || value.equals("")) {
                 return FormValidation.ok();
             } else {
