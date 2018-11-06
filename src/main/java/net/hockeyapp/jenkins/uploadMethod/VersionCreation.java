@@ -12,6 +12,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import java.io.IOException;
 
@@ -21,7 +22,8 @@ public class VersionCreation extends RadioButtonSupport {
     private String appId;
 
     @Exported
-    private String versionCode;
+    @Nullable
+    private String versionCode = null;
 
     @Deprecated
     public VersionCreation(String appId) {
@@ -38,6 +40,7 @@ public class VersionCreation extends RadioButtonSupport {
         return appId;
     }
 
+    @Nullable
     public String getVersionCode() {
         return versionCode;
     }
