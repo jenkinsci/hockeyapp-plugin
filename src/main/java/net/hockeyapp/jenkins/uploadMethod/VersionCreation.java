@@ -30,6 +30,12 @@ public class VersionCreation extends RadioButtonSupport {
         this.appId = Util.fixNull(appId);
     }
 
+    @Deprecated
+    public VersionCreation(@Nonnull String appId, @CheckForNull String versionCode) {
+        this.appId = Util.fixNull(appId);
+        this.versionCode = Util.fixNull(versionCode);
+    }
+
     @Nonnull
     public String getAppId() {
         return appId;
