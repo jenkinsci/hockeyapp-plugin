@@ -24,10 +24,11 @@ public class VersionCreation extends RadioButtonSupport {
     private String versionCode = "";
 
     @DataBoundConstructor
-    public VersionCreation(String appId) {
-        this.appId = Util.fixEmptyAndTrim(appId);
+    public VersionCreation(@Nonnull String appId) {
+        this.appId = Util.fixNull(appId);
     }
 
+    @Nonnull
     public String getAppId() {
         return appId;
     }
