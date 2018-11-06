@@ -13,6 +13,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public class VersionCreation extends RadioButtonSupport {
@@ -21,7 +22,8 @@ public class VersionCreation extends RadioButtonSupport {
     private String appId;
 
     @Exported
-    private String versionCode = "";
+    @CheckForNull
+    private String versionCode;
 
     @DataBoundConstructor
     public VersionCreation(@Nonnull String appId) {
@@ -33,13 +35,13 @@ public class VersionCreation extends RadioButtonSupport {
         return appId;
     }
 
-    @Nonnull
+    @CheckForNull
     public String getVersionCode() {
         return versionCode;
     }
 
     @DataBoundSetter
-    public void setVersionCode(@Nonnull String versionCode) {
+    public void setVersionCode(@CheckForNull String versionCode) {
         this.versionCode = Util.fixNull(versionCode);
     }
 
