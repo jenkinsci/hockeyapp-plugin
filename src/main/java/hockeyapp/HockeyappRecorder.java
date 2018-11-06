@@ -453,7 +453,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         HttpInfo info = new HttpInfo();
         if (application.uploadMethod instanceof VersionCreation) {
             VersionCreation versionCreation = (VersionCreation) application.uploadMethod;
-            if (versionCreation.getAppId() != null && !vars.expand(versionCreation.getAppId()).isEmpty()) {
+            if (!vars.expand(versionCreation.getAppId()).isEmpty()) {
                 info.setPath("/api/2/apps/" + vars.expand(versionCreation.getAppId()) + "/app_versions/");
                 if (versionCreation.getVersionCode() != null && !vars.expand(versionCreation.getVersionCode()).isEmpty()) {
                     info.setPath(info.getPath() + vars.expand(versionCreation.getVersionCode()));
