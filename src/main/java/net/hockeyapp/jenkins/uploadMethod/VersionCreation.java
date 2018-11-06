@@ -9,12 +9,11 @@ import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 
-import javax.annotation.Nullable;
-import javax.servlet.ServletException;
-import java.io.IOException;
+import javax.annotation.Nonnull;
 
 public class VersionCreation extends RadioButtonSupport {
 
@@ -22,27 +21,25 @@ public class VersionCreation extends RadioButtonSupport {
     private String appId;
 
     @Exported
-    @Nullable
-    private String versionCode = null;
-
-    @Deprecated
-    public VersionCreation(String appId) {
-        this(appId, null);
-    }
+    private String versionCode = "";
 
     @DataBoundConstructor
-    public VersionCreation(String appId, String versionCode) {
+    public VersionCreation(String appId) {
         this.appId = Util.fixEmptyAndTrim(appId);
-        this.versionCode = Util.fixEmptyAndTrim(versionCode);
     }
 
     public String getAppId() {
         return appId;
     }
 
-    @Nullable
+    @Nonnull
     public String getVersionCode() {
         return versionCode;
+    }
+
+    @DataBoundSetter
+    public void setVersionCode(@Nonnull String versionCode) {
+        this.versionCode = Util.fixNull(versionCode);
     }
 
     public Descriptor<RadioButtonSupport> getDescriptor() {
