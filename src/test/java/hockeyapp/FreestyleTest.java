@@ -197,7 +197,7 @@ public class FreestyleTest extends ProjectTest {
 
         // Then
         assertBuildSuccessful(build);
-        mockHockeyAppServer.verify(1, putRequestedFor(urlEqualTo(HOCKEY_APP_VERSION_UPLOAD_URL))
+        mockHockeyAppServer.verify(1, putRequestedFor(urlEqualTo(HOCKEY_APP_VERSION_UPLOAD_BASE_URL))
                 .withHeader("Content-Type", containing("multipart/form-data;"))
                 .withRequestBody(ipaFormData())
                 .withRequestBody(mandatoryFormData(0))
