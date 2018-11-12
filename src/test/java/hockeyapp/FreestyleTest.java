@@ -181,13 +181,13 @@ public class FreestyleTest extends ProjectTest {
     }
 
     @Test
-    public void testFreeStyleBuildWithSameVersion() throws Exception {
+    public void should_UploadAVersionedApp_When_VersionCreationIsSelected_And_VersionIsNotSpecified() throws Exception {
         // Given
         HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
                 .setLocalhostBaseUrl(mockHockeyAppServer.port())
                 .setApplications(Collections.singletonList(
                         new HockeyappApplicationBuilder()
-                                .setUploadMethod(new VersionCreation(APP_ID, "1"))
+                                .setUploadMethod(new VersionCreation(APP_ID))
                                 .create()))
                 .create();
         project.getPublishersList().add(hockeyappRecorder);
@@ -197,7 +197,61 @@ public class FreestyleTest extends ProjectTest {
 
         // Then
         assertBuildSuccessful(build);
-        mockHockeyAppServer.verify(1, putRequestedFor(urlEqualTo(HOCKEY_APP_VERSION_UPLOAD_BASE_URL))
+        mockHockeyAppServer.verify(1, postRequestedFor(urlEqualTo(HOCKEY_VERSION_UPLOAD_NEW_URL))
+                .withHeader("Content-Type", containing("multipart/form-data;"))
+                .withRequestBody(ipaFormData())
+                .withRequestBody(mandatoryFormData(0))
+                .withRequestBody(notifyFormData(0))
+                .withRequestBody(statusFormData(1)));
+        failOnUnmatchedRequests();
+    }
+
+    @Test
+    public void should_UploadAVersionedApp_When_VersionCreationIsSelected_And_VersionIsSpecfied_1() throws Exception {
+        // Given
+        final String version = "1";
+        HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
+                .setLocalhostBaseUrl(mockHockeyAppServer.port())
+                .setApplications(Collections.singletonList(
+                        new HockeyappApplicationBuilder()
+                                .setUploadMethod(new VersionCreation(APP_ID, version))
+                                .create()))
+                .create();
+        project.getPublishersList().add(hockeyappRecorder);
+
+        // When
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        // Then
+        assertBuildSuccessful(build);
+        mockHockeyAppServer.verify(1, putRequestedFor(urlEqualTo(HOCKEY_VERSION_UPLOAD_EXISTING_BASE_URL + version))
+                .withHeader("Content-Type", containing("multipart/form-data;"))
+                .withRequestBody(ipaFormData())
+                .withRequestBody(mandatoryFormData(0))
+                .withRequestBody(notifyFormData(0))
+                .withRequestBody(statusFormData(1)));
+        failOnUnmatchedRequests();
+    }
+
+    @Test
+    public void should_UploadAVersionedApp_When_VersionCreationIsSelected_And_VersionIsSpecfied_2() throws Exception {
+        // Given
+        final String version = "2";
+        HockeyappRecorder hockeyappRecorder = new HockeyappRecorderBuilder()
+                .setLocalhostBaseUrl(mockHockeyAppServer.port())
+                .setApplications(Collections.singletonList(
+                        new HockeyappApplicationBuilder()
+                                .setUploadMethod(new VersionCreation(APP_ID, version))
+                                .create()))
+                .create();
+        project.getPublishersList().add(hockeyappRecorder);
+
+        // When
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+
+        // Then
+        assertBuildSuccessful(build);
+        mockHockeyAppServer.verify(1, putRequestedFor(urlEqualTo(HOCKEY_VERSION_UPLOAD_EXISTING_BASE_URL + version))
                 .withHeader("Content-Type", containing("multipart/form-data;"))
                 .withRequestBody(ipaFormData())
                 .withRequestBody(mandatoryFormData(0))

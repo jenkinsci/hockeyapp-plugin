@@ -25,7 +25,8 @@ public abstract class ProjectTest {
     static final String IPA_CONTENTS = "Lorem Ipsum";
 
     static final String HOCKEY_APP_UPLOAD_URL = "/api/2/apps/upload";
-    static final String HOCKEY_APP_VERSION_UPLOAD_BASE_URL = "/api/2/apps/" + APP_ID + "/app_versions/1";
+    static final String HOCKEY_VERSION_UPLOAD_EXISTING_BASE_URL = "/api/2/apps/" + APP_ID + "/app_versions/";
+    static final String HOCKEY_VERSION_UPLOAD_NEW_URL = "/api/2/apps/" + APP_ID + "/app_versions/upload";
     static final String HOCKEY_APP_DELETE_URL = "/api/2/apps/" + APP_ID + "/app_versions/delete";
 
     @Rule
@@ -35,6 +36,8 @@ public abstract class ProjectTest {
 
     @Before
     public void before() throws Exception {
+        // TODO: Template these responses for more flexibility.
+        // Stub upload app
         mockHockeyAppServer.stubFor(post(urlEqualTo(HOCKEY_APP_UPLOAD_URL))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
@@ -61,7 +64,9 @@ public abstract class ProjectTest {
                                 "  \"owner_token\": \"bar-baz\",\n" +
                                 "  \"retention_days\": \"90\"\n" +
                                 "}")));
-        mockHockeyAppServer.stubFor(put(urlEqualTo(HOCKEY_APP_VERSION_UPLOAD_BASE_URL))
+
+        // Stub upload new version
+        mockHockeyAppServer.stubFor(put(urlPathMatching(HOCKEY_VERSION_UPLOAD_EXISTING_BASE_URL+ "[0-9]+"))  // TODO: Grab version from request param
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(201)
@@ -87,6 +92,36 @@ public abstract class ProjectTest {
                                 "  \"owner_token\": \"bar-baz\",\n" +
                                 "  \"retention_days\": \"90\"\n" +
                                 "}")));
+
+        // Stub upload existing version
+        mockHockeyAppServer.stubFor(post(urlEqualTo(HOCKEY_VERSION_UPLOAD_NEW_URL))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withStatus(201)
+                        .withBody("{\n" +
+                                "  \"title\": \"Android\",\n" +
+                                "  \"bundle_identifier\": \"net.hockeyapp.jenkins.android\",\n" +
+                                "  \"public_identifier\": \"" + APP_ID + "\",\n" +
+                                "  \"platform\": \"Android\",\n" +
+                                "  \"release_type\": 0,\n" +
+                                "  \"custom_release_type\": null,\n" +
+                                "  \"created_at\": \"2018-06-16T21:16:48Z\",\n" +
+                                "  \"updated_at\": \"2018-06-16T21:16:51Z\",\n" +
+                                "  \"featured\": false,\n" +
+                                "  \"role\": 0,\n" +
+                                "  \"id\": 788014,\n" +
+                                "  \"config_url\": \"https://rink.hockeyapp.net/manage/apps/bar/app_versions/1\",\n" +
+                                "  \"public_url\": \"https://rink.hockeyapp.net/apps/foo\",\n" +
+                                "  \"minimum_os_version\": \"5.0\",\n" +
+                                "  \"device_family\": null,\n" +
+                                "  \"status\": 2,\n" +
+                                "  \"visibility\": \"private\",\n" +
+                                "  \"owner\": \"Foo Bar Inc\",\n" +
+                                "  \"owner_token\": \"bar-baz\",\n" +
+                                "  \"retention_days\": \"90\"\n" +
+                                "}")));
+
+        // Stub delete app
         mockHockeyAppServer.stubFor(post(urlEqualTo(HOCKEY_APP_DELETE_URL))
                 .willReturn(aResponse()
                         .withStatus(204)));
