@@ -55,6 +55,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -75,30 +76,34 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public final List<HockeyappApplication> applications;
 
     @Exported
-    public final boolean debugMode;
+    public boolean debugMode;
     @Exported
     public String baseUrl = DEFAULT_HOCKEY_URL;
 
     @Exported
-    public final boolean failGracefully;
+    public boolean failGracefully;
 
-    public final BaseUrlHolder baseUrlHolder;
+    public BaseUrlHolder baseUrlHolder;
 
     private static final String UTF8 = "UTF-8";
     private static final Charset DEFAULT_CHARACTER_SET = StandardCharsets.UTF_8;
     private static final ContentType DEFAULT_CONTENT_TYPE = ContentType.create("text/plain", Consts.UTF_8);
 
-    @DataBoundConstructor
-    public HockeyappRecorder(List<HockeyappApplication> applications, boolean debugMode,
-                             BaseUrlHolder baseUrlHolder, boolean failGracefully) {
-        this.applications = applications;
+    @Deprecated
+    public HockeyappRecorder(@CheckForNull List<HockeyappApplication> applications, boolean debugMode,
+                             @CheckForNull BaseUrlHolder baseUrlHolder, boolean failGracefully) {
+        this.applications = Util.fixNull(applications);
         this.debugMode = debugMode;
         this.baseUrlHolder = baseUrlHolder;
         if (baseUrlHolder != null) {
             this.baseUrl = baseUrlHolder.baseUrl;
         }
-
         this.failGracefully = failGracefully;
+    }
+
+    @DataBoundConstructor
+    public HockeyappRecorder(@CheckForNull List<HockeyappApplication> applications) {
+        this.applications = Util.fixNull(applications);
     }
 
     List<HockeyappApplication> getApplications() {
