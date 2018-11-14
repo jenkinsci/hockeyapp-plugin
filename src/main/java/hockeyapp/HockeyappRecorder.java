@@ -85,7 +85,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public BaseUrlHolder baseUrlHolder;
 
     private static final String UTF8 = "UTF-8";
-    private static final Charset UTF8_CHARSET = StandardCharsets.UTF_8;
+    private static final Charset DEFAULT_CHARACTER_SET = StandardCharsets.UTF_8;
     private static final ContentType DEFAULT_CONTENT_TYPE = ContentType.create("text/plain", Consts.UTF_8);
 
     @DataBoundConstructor
@@ -666,7 +666,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                 JSONParser parser = new JSONParser();
                 final Map parsedMap = (Map) parser.parse(
-                        new BufferedReader(new InputStreamReader(is, UTF8_CHARSET)));
+                        new BufferedReader(new InputStreamReader(is, DEFAULT_CHARACTER_SET)));
                 logger.println(
                         Messages.DELETED_OLD_VERSIONS(String.valueOf(
                                 parsedMap.get("total_entries")))
