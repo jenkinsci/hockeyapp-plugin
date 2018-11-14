@@ -759,8 +759,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject json)
-                throws FormException {
+        public boolean configure(StaplerRequest req, JSONObject json) {
             // XXX is this now the right style?
             req.bindJSON(this, json);
             save();
