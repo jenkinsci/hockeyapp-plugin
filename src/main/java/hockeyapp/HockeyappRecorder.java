@@ -616,9 +616,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         Collection<AbstractBuild<?, ?>> predicated = CollectionUtils.select(builds, new Predicate() {
             public boolean evaluate(Object o) {
                 Result r = ((AbstractBuild<?, ?>) o).getResult();
-                return r == null // no result yet
-                        ? false
-                        : r.isBetterOrEqualTo(Result.SUCCESS);
+                // no result yet
+                return r != null && r.isBetterOrEqualTo(Result.SUCCESS);
             }
         });
 
