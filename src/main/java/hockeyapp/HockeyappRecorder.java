@@ -56,7 +56,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
