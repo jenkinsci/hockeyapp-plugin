@@ -72,17 +72,17 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public static final int DEFAULT_TIMEOUT = 60000;
 
     @Exported
-    public List<HockeyappApplication> applications;
+    public final List<HockeyappApplication> applications;
 
     @Exported
-    public boolean debugMode;
+    public final boolean debugMode;
     @Exported
     public String baseUrl;
 
     @Exported
-    public boolean failGracefully;
+    public final boolean failGracefully;
 
-    public BaseUrlHolder baseUrlHolder;
+    public final BaseUrlHolder baseUrlHolder;
 
     private static final String UTF8 = "UTF-8";
     private static final Charset DEFAULT_CHARACTER_SET = StandardCharsets.UTF_8;
@@ -681,7 +681,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public static class BaseUrlHolder {
 
-        private String baseUrl;
+        private final String baseUrl;
 
         @DataBoundConstructor
         public BaseUrlHolder(String baseUrl) {
@@ -816,7 +816,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private static class EnvAction implements EnvironmentContributingAction {
-        private transient Map<String, String> data = new HashMap<>();
+        private final transient Map<String, String> data = new HashMap<>();
 
         private void add(String key, String value) {
             if (data == null) return;
