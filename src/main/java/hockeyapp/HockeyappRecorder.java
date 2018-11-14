@@ -18,7 +18,6 @@ import net.hockeyapp.jenkins.uploadMethod.AppCreation;
 import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -159,8 +158,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         String matchedPattern = null; // to log properly
         if (hasProxy) {
             List<Pattern> noProxyHostPatterns = instance.proxy.getNoProxyHostPatterns();
-            for (int i = 0; i < noProxyHostPatterns.size(); i++) {
-                Pattern noProxyPattern = noProxyHostPatterns.get(i);
+            for (Pattern noProxyPattern : noProxyHostPatterns) {
                 if (noProxyPattern.matcher(url.getHost()).matches()) {
                     useProxy = false;
                     matchedPattern = noProxyPattern.toString();
@@ -605,19 +603,17 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Override
     public Collection<? extends Action> getProjectActions(
             AbstractProject<?, ?> project) {
-        ArrayList<HockeyappBuildAction> actions = new ArrayList<HockeyappBuildAction>();
+        ArrayList<HockeyappBuildAction> actions = new ArrayList<>();
         RunList<? extends AbstractBuild<?, ?>> builds = project.getBuilds();
 
         @SuppressWarnings("unchecked")
-        Collection<AbstractBuild<?, ?>> predicated = CollectionUtils.select(builds, new Predicate() {
-            public boolean evaluate(Object o) {
-                Result r = ((AbstractBuild<?, ?>) o).getResult();
-                // no result yet
-                return r != null && r.isBetterOrEqualTo(Result.SUCCESS);
-            }
+        Collection<AbstractBuild<?, ?>> predicated = CollectionUtils.select(builds, object -> {
+            Result r = ((AbstractBuild<?, ?>) object).getResult();
+            // no result yet
+            return r != null && r.isBetterOrEqualTo(Result.SUCCESS);
         });
 
-        ArrayList<AbstractBuild<?, ?>> filteredList = new ArrayList<AbstractBuild<?, ?>>(
+        ArrayList<AbstractBuild<?, ?>> filteredList = new ArrayList<>(
                 predicated);
 
         Collections.reverse(filteredList);
@@ -643,7 +639,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
             HttpPost httpPost = new HttpPost(url.toURI());
             httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+            List<NameValuePair> nameValuePairs = new ArrayList<>(1);
             nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
             nameValuePairs.add(new BasicNameValuePair("sort", application.getSortOldVersions()));
             nameValuePairs.add(new BasicNameValuePair("strategy", application.getStrategyOldVersions()));
@@ -817,7 +813,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private static class EnvAction implements EnvironmentContributingAction {
-        private transient Map<String, String> data = new HashMap<String, String>();
+        private transient Map<String, String> data = new HashMap<>();
 
         private void add(String key, String value) {
             if (data == null) return;
