@@ -345,7 +345,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                     InputStream is = resEntity.getContent();
 
-                    String responseBody = IOUtils.toString(is);
+                    String responseBody = IOUtils.toString(is, DEFAULT_CHARACTER_SET);
                     // Improved error handling.
                     if (response.getStatusLine().getStatusCode() != 201) {
                         logger.println(
