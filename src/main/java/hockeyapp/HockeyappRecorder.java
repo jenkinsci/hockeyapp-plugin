@@ -601,6 +601,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
     }
 
+    @Nonnull
     @Override
     public Collection<? extends Action> getProjectActions(
             AbstractProject<?, ?> project) {
@@ -772,6 +773,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Nonnull
+        @Override
         public String getDisplayName() {
             return Messages.UPLOAD_TO_HOCKEYAPP();
         }
