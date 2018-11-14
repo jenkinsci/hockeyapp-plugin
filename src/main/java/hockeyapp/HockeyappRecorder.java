@@ -152,7 +152,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         HttpConnectionParams.setConnectionTimeout(params, this.getDescriptor().getTimeoutInt());
         HttpConnectionParams.setSoTimeout(params, this.getDescriptor().getTimeoutInt());
 
-        boolean hasProxy = instance != null && instance.proxy != null;
+        boolean hasProxy = instance.proxy != null;
 
         // ProxyConfig might have no proxy exception for certain hosts
         boolean useProxy = true;
@@ -624,7 +624,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         for (AbstractBuild<?, ?> build : filteredList) {
             List<HockeyappBuildAction> hockeyappActions = build
                     .getActions(HockeyappBuildAction.class);
-            if (hockeyappActions != null && hockeyappActions.size() > 0) {
+            if (hockeyappActions.size() > 0) {
                 for (HockeyappBuildAction action : hockeyappActions) {
                     actions.add(new HockeyappBuildAction(action));
                 }
