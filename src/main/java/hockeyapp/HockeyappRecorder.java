@@ -156,16 +156,16 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
         boolean hasProxy = instance != null && instance.proxy != null;
 
-        // ProxyConfig might have noproxy-exception for certain hosts
+        // ProxyConfig might have no proxy exception for certain hosts
         boolean useProxy = true;
         String matchedPattern = null; // to log properly
         if (hasProxy) {
             List<Pattern> noProxyHostPatterns = instance.proxy.getNoProxyHostPatterns();
             for (int i = 0; i < noProxyHostPatterns.size(); i++) {
-                Pattern noproxypattern = noProxyHostPatterns.get(i);
-                if (noproxypattern.matcher(url.getHost()).matches()) {
+                Pattern noProxyPattern = noProxyHostPatterns.get(i);
+                if (noProxyPattern.matcher(url.getHost()).matches()) {
                     useProxy = false;
-                    matchedPattern = noproxypattern.toString();
+                    matchedPattern = noProxyPattern.toString();
                 }
             }
         }
@@ -408,7 +408,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                         if (application.uploadMethod instanceof VersionCreation) {
                             appId = vars.expand(((VersionCreation) application.uploadMethod).getAppId());
                         } else {
-                            //load App ID from reponse
+                            //load App ID from response
                             appId = (String) parsedMap.get("public_identifier");
                         }
                         if (appId == null) {
@@ -505,7 +505,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             if (build instanceof AbstractBuild) {
                 changeLogSet = ((AbstractBuild) build).getChangeSet();
             } else if (build instanceof WorkflowRun) {
-                //to support multibranch pipelines
+                // To support multi branch pipelines
                 List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeLogSetList = ((WorkflowRun) build).getChangeSets();
                 changeLogSet = changeLogSetList.isEmpty() ? null : changeLogSetList.get(0);
             } else {
@@ -560,7 +560,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     private void printUploadSpeed(long duration, float fileSize, PrintStream logger) {
         Float speed = fileSize / duration;
-        speed *= 8000; // In order to get bits pers second not bytes per miliseconds
+        speed *= 8000; // In order to get bits per second not bytes per milliseconds
 
         if (Float.isNaN(speed)) logger.println("NaN bps");
 
