@@ -634,8 +634,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return actions;
     }
 
-    private boolean cleanupOldVersions(PrintStream logger, EnvVars vars, String appId, URL host,
-                                       HockeyappApplication application) {
+    private void cleanupOldVersions(PrintStream logger, EnvVars vars, String appId, URL host,
+                                    HockeyappApplication application) {
         try {
             String path = "/api/2/apps/" + vars.expand(appId) + "/app_versions/delete";
             URL url = new URL(host, path);
@@ -661,7 +661,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                                     response.getStatusLine().getStatusCode())
                     );
                     logger.println(responseBody);
-                    return false;
+                    return;
                 }
 
                 JSONParser parser = new JSONParser();
@@ -674,9 +674,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             }
         } catch (Exception e) {
             e.printStackTrace(logger);
-            return false;
         }
-        return true;
     }
 
     public static class BaseUrlHolder {
