@@ -22,6 +22,7 @@ import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -36,6 +37,7 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
@@ -84,6 +86,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     private static final String UTF8 = "UTF-8";
     private static final Charset UTF8_CHARSET = StandardCharsets.UTF_8;
+    private static final ContentType DEFAULT_CONTENT_TYPE = ContentType.create("text/plain", Consts.UTF_8);
 
     @DataBoundConstructor
     public HockeyappRecorder(List<HockeyappApplication> applications, boolean debugMode,
@@ -317,18 +320,18 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     }
 
                     if (application.tags != null && !vars.expand(application.tags).isEmpty() && application.tags.length() > 0)
-                        entity.addPart("tags", new StringBody(vars.expand(application.tags)));
+                        entity.addPart("tags", new StringBody(vars.expand(application.tags), DEFAULT_CONTENT_TYPE));
 
-                    entity.addPart("mandatory", new StringBody(application.mandatory ? "1" : "0"));
+                    entity.addPart("mandatory", new StringBody(application.mandatory ? "1" : "0", DEFAULT_CONTENT_TYPE));
 
                     if (application.teams != null && !vars.expand(application.teams).isEmpty() && application.teams.length() > 0)
-                        entity.addPart("teams", new StringBody(vars.expand(application.teams)));
+                        entity.addPart("teams", new StringBody(vars.expand(application.teams), DEFAULT_CONTENT_TYPE));
 
-                    entity.addPart("notify", new StringBody(application.notifyTeam ? "1" : "0"));
-                    entity.addPart("status", new StringBody(application.downloadAllowed ? "2" : "1"));
+                    entity.addPart("notify", new StringBody(application.notifyTeam ? "1" : "0", DEFAULT_CONTENT_TYPE));
+                    entity.addPart("status", new StringBody(application.downloadAllowed ? "2" : "1", DEFAULT_CONTENT_TYPE));
                     if (application.uploadMethod instanceof AppCreation) {
                         AppCreation appCreation = (AppCreation) application.uploadMethod;
-                        entity.addPart("private", new StringBody(appCreation.publicPage ? "false" : "true"));
+                        entity.addPart("private", new StringBody(appCreation.publicPage ? "false" : "true", DEFAULT_CONTENT_TYPE));
                     }
                     httpRequest.setEntity(entity);
 
@@ -479,8 +482,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         if (application.releaseNotesMethod instanceof ManualReleaseNotes) {
             ManualReleaseNotes manualReleaseNotes = (ManualReleaseNotes) application.releaseNotesMethod;
             if (manualReleaseNotes.getReleaseNotes() != null) {
-                entity.addPart("notes", new StringBody(vars.expand(manualReleaseNotes.getReleaseNotes()), UTF8_CHARSET));
-                entity.addPart("notes_type", new StringBody(manualReleaseNotes.isMarkdown() ? "1" : "0"));
+                entity.addPart("notes", new StringBody(vars.expand(manualReleaseNotes.getReleaseNotes()), DEFAULT_CONTENT_TYPE));
+                entity.addPart("notes_type", new StringBody(manualReleaseNotes.isMarkdown() ? "1" : "0", DEFAULT_CONTENT_TYPE));
             }
         } else if (application.releaseNotesMethod instanceof FileReleaseNotes) {
             FileReleaseNotes fileReleaseNotes = (FileReleaseNotes) application.releaseNotesMethod;
@@ -488,8 +491,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 File releaseNotesFile = getFileLocally(workspace, vars.expand(fileReleaseNotes.getFileName()), tempDir);
                 logger.println(releaseNotesFile);
                 String releaseNotes = readReleaseNotesFile(releaseNotesFile);
-                entity.addPart("notes", new StringBody(releaseNotes, UTF8_CHARSET));
-                entity.addPart("notes_type", new StringBody(fileReleaseNotes.isMarkdown() ? "1" : "0"));
+                entity.addPart("notes", new StringBody(releaseNotes, DEFAULT_CONTENT_TYPE));
+                entity.addPart("notes_type", new StringBody(fileReleaseNotes.isMarkdown() ? "1" : "0", DEFAULT_CONTENT_TYPE));
             }
         } else {
             StringBuilder sb = new StringBuilder();
@@ -515,8 +518,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 }
             }
 
-            entity.addPart("notes", new StringBody(sb.toString(), UTF8_CHARSET));
-            entity.addPart("notes_type", new StringBody("0"));
+            entity.addPart("notes", new StringBody(sb.toString(), DEFAULT_CONTENT_TYPE));
+            entity.addPart("notes_type", new StringBody("0", DEFAULT_CONTENT_TYPE));
         }
 
     }
