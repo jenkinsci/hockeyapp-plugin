@@ -3,6 +3,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin allows you to upload new versions of your iOS (.ipa),
-  MacOS (.app), and Android (.apk) applications to hockeyapp.net.
+  This plugin allows you to upload new versions of your Android (.apk), iOS (.ipa), and MacOS (.app) applications to hockeyapp.net.
 </div>
