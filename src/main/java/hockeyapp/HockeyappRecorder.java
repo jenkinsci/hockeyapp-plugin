@@ -14,7 +14,6 @@ import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
-import net.hockeyapp.jenkins.releaseNotes.NoReleaseNotes;
 import net.hockeyapp.jenkins.uploadMethod.AppCreation;
 import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import net.sf.json.JSONObject;
@@ -479,9 +478,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     private void createReleaseNotes(Run<?, ?> build, FilePath workspace, MultipartEntity entity, PrintStream logger,
                                     File tempDir, EnvVars vars, HockeyappApplication application)
             throws IOException, InterruptedException {
-        if (application.releaseNotesMethod instanceof NoReleaseNotes) {
-            return;
-        } else if (application.releaseNotesMethod instanceof ManualReleaseNotes) {
+        if (application.releaseNotesMethod instanceof ManualReleaseNotes) {
             ManualReleaseNotes manualReleaseNotes = (ManualReleaseNotes) application.releaseNotesMethod;
             if (manualReleaseNotes.getReleaseNotes() != null) {
                 entity.addPart("notes", new StringBody(vars.expand(manualReleaseNotes.getReleaseNotes()), UTF8_CHARSET));
@@ -496,7 +493,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 entity.addPart("notes", new StringBody(releaseNotes, UTF8_CHARSET));
                 entity.addPart("notes_type", new StringBody(fileReleaseNotes.isMarkdown() ? "1" : "0"));
             }
-
         } else {
             StringBuilder sb = new StringBuilder();
 
