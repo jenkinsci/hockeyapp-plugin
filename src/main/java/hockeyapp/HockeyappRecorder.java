@@ -794,7 +794,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
 
         @SuppressWarnings("unused")
-        public FormValidation doCheckBaseUrl(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckBaseUrl(@QueryParameter String value) {
             if (value.isEmpty()) {
                 return FormValidation.error("You must enter a URL.");
             } else {

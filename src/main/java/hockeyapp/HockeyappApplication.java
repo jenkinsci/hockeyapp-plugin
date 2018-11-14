@@ -20,8 +20,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,7 +157,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
 
 
         @SuppressWarnings("unused")
-        public FormValidation doCheckApiToken(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckApiToken(@QueryParameter String value) {
             if (value.isEmpty()) {
                 final Jenkins activeInstance = Jenkins.getActiveInstance();
 
@@ -181,7 +179,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         }
 
         @SuppressWarnings("unused")
-        public FormValidation doCheckNumberOldVersions(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckNumberOldVersions(@QueryParameter String value) {
             if (value.isEmpty()) {
                 return FormValidation.error("You must specify a positive Number.");
             } else {
