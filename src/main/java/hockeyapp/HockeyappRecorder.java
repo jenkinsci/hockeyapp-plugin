@@ -555,7 +555,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private void printUploadSpeed(long duration, float fileSize, PrintStream logger) {
-        Float speed = fileSize / duration;
+        float speed = fileSize / duration;
         speed *= 8000; // In order to get bits per second not bytes per milliseconds
 
         if (Float.isNaN(speed)) logger.println("NaN bps");
