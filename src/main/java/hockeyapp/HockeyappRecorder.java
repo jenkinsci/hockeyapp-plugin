@@ -23,7 +23,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.ArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
