@@ -5,7 +5,8 @@
             <f:textbox/>
         </f:entry>
         <f:entry title="${%HTTP Client Timeout}" field="timeout">
-            <f:textbox/>
+            <f:textbox
+                    checkUrl="'descriptorByName/hockeyapp.HockeyappRecorder/checkTimeout?value='+escape(this.value)"/>
         </f:entry>
         <f:entry title="${%Enable global Debug Mode}" field="globalDebugMode">
             <f:checkbox/>
