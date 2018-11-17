@@ -51,6 +51,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
@@ -77,6 +78,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Exported
     public boolean debugMode;
+
     @Exported
     public String baseUrl = DEFAULT_HOCKEY_URL;
 
@@ -114,16 +116,33 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return debugMode;
     }
 
+    @DataBoundSetter
+    public void setDebugMode(boolean debugMode) {
+        this.debugMode = debugMode;
+    }
+
     String getBaseUrl() {
         return baseUrl;
     }
 
+    @DataBoundSetter
+    public void setBaseUrl(@CheckForNull String baseUrl) {
+        this.baseUrl = Util.fixNull(baseUrl); // TODO: Check free style, pipeline, unit test, jelly files
+    }
+
+    @Deprecated
+    @Nonnull
     BaseUrlHolder getBaseUrlHolder() {
         return baseUrlHolder;
     }
 
     boolean getFailGracefully() {
         return failGracefully;
+    }
+
+    @DataBoundSetter
+    public void setFailGracefully(boolean failGracefully) {
+        this.failGracefully = failGracefully;
     }
 
     @Override
@@ -676,11 +695,11 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
     }
 
+    @Deprecated
     public static class BaseUrlHolder {
 
         private final String baseUrl;
 
-        @DataBoundConstructor
         public BaseUrlHolder(String baseUrl) {
             this.baseUrl = baseUrl;
         }
