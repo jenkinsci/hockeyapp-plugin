@@ -80,7 +80,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public boolean debugMode;
 
     @Exported
-    public String baseUrl = DEFAULT_HOCKEY_URL;
+    public String baseUrl;
 
     @Exported
     public boolean failGracefully;
@@ -569,7 +569,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private URL createHostUrl(EnvVars vars) throws MalformedURLException {
-        return new URL(vars.expand(baseUrl));
+        URL host;
+        if (baseUrl != null) {
+            host = new URL(vars.expand(baseUrl));
+        } else {
+            host = new URL(DEFAULT_HOCKEY_URL);
+        }
+        return host;
     }
 
     private void printUploadSpeed(long duration, float fileSize, PrintStream logger) {
