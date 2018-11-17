@@ -1,7 +1,22 @@
 package hockeyapp;
 
-import hudson.*;
-import hudson.model.*;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.ProxyConfiguration;
+import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Action;
+import hudson.model.BuildListener;
+import hudson.model.EnvironmentContributingAction;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.BuildStepDescriptor;
@@ -58,13 +73,26 @@ import org.kohsuke.stapler.export.Exported;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
@@ -72,25 +100,19 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public static final long SCHEMA_VERSION_NUMBER = 2L;
     public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
     public static final int DEFAULT_TIMEOUT = 60000;
-
-    @Exported
-    public final List<HockeyappApplication> applications;
-
-    @Exported
-    public boolean debugMode;
-
-    @Exported
-    @CheckForNull
-    public String baseUrl;
-
-    @Exported
-    public boolean failGracefully;
-
-    public BaseUrlHolder baseUrlHolder;
-
     private static final String UTF8 = "UTF-8";
     private static final Charset DEFAULT_CHARACTER_SET = StandardCharsets.UTF_8;
     private static final ContentType DEFAULT_CONTENT_TYPE = ContentType.create("text/plain", Consts.UTF_8);
+    @Exported
+    public final List<HockeyappApplication> applications;
+    @Exported
+    public boolean debugMode;
+    @Exported
+    @CheckForNull
+    public String baseUrl;
+    @Exported
+    public boolean failGracefully;
+    public BaseUrlHolder baseUrlHolder;
 
     @Deprecated
     public HockeyappRecorder(@CheckForNull List<HockeyappApplication> applications, boolean debugMode,
@@ -595,7 +617,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     private File getFileLocally(FilePath workingDir, String strFile,
-                                       File tempDir) throws IOException, InterruptedException {
+                                File tempDir) throws IOException, InterruptedException {
         // Due to the previous inconsistency about whether or not to use absolute paths,
         // here we automatically remove the workspace, so that 'strFile' is relative
         // and existing jobs continue to function, regardless of how they were configured
@@ -702,6 +724,12 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
     }
 
+    private String readReleaseNotesFile(File file) throws IOException {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            return IOUtils.toString(inputStream, "UTF-8");
+        }
+    }
+
     @Deprecated
     public static class BaseUrlHolder {
 
@@ -722,6 +750,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // point.
     public static final class DescriptorImpl extends
             BuildStepDescriptor<Publisher> {
+        private String defaultToken;
+        private boolean globalDebugMode = false;
+        private String timeout;
+
         public DescriptorImpl() {
             super(HockeyappRecorder.class);
             load();
@@ -748,15 +780,15 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             save();
         }
 
-        private String defaultToken;
-
-        private boolean globalDebugMode = false;
-
-        private String timeout;
-
         @SuppressWarnings("unused")
         public String getTimeout() {
             return timeout;
+        }
+
+        @SuppressWarnings("unused")
+        public void setTimeout(String timeout) {
+            this.timeout = Util.fixEmptyAndTrim(timeout);
+            save();
         }
 
         public int getTimeoutInt() {
@@ -769,12 +801,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             } else {
                 return HockeyappRecorder.DEFAULT_TIMEOUT;
             }
-        }
-
-        @SuppressWarnings("unused")
-        public void setTimeout(String timeout) {
-            this.timeout = Util.fixEmptyAndTrim(timeout);
-            save();
         }
 
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
@@ -833,12 +859,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             }
         }
 
-    }
-
-    private String readReleaseNotesFile(File file) throws IOException {
-        try (FileInputStream inputStream = new FileInputStream(file)) {
-            return IOUtils.toString(inputStream, "UTF-8");
-        }
     }
 
     private static class EnvAction implements EnvironmentContributingAction {
