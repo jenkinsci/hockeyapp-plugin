@@ -594,7 +594,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         logger.println("HockeyApp Upload Speed: " + String.format("%.2f", speed) + units[idx]);
     }
 
-    private static File getFileLocally(FilePath workingDir, String strFile,
+    private File getFileLocally(FilePath workingDir, String strFile,
                                        File tempDir) throws IOException, InterruptedException {
         // Due to the previous inconsistency about whether or not to use absolute paths,
         // here we automatically remove the workspace, so that 'strFile' is relative
@@ -617,7 +617,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return new File(workingDir.getRemote(), strFile);
     }
 
-    private static File getLocalFileFromFilePath(FilePath filePath, File tempDir) throws IOException, InterruptedException {
+    private File getLocalFileFromFilePath(FilePath filePath, File tempDir) throws IOException, InterruptedException {
         if (filePath.isRemote()) {
             FilePath localFilePath = new FilePath(new FilePath(tempDir), filePath.getName());
             filePath.copyTo(localFilePath);
