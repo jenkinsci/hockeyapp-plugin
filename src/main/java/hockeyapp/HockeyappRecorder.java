@@ -144,13 +144,14 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         this.debugMode = debugMode;
     }
 
+    @Nonnull
     String getBaseUrl() {
-        return baseUrl;
+        return baseUrl == null ? DEFAULT_HOCKEY_URL : baseUrl;
     }
 
     @DataBoundSetter
-    public void setBaseUrl(@CheckForNull String baseUrl) {
-        this.baseUrl = Util.fixNull(baseUrl); // TODO: Check free style, pipeline, unit test, jelly files
+    public void setBaseUrl(@Nonnull String baseUrl) {
+        this.baseUrl = baseUrl.isEmpty() ? null : baseUrl;
     }
 
     @Deprecated
