@@ -80,6 +80,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public boolean debugMode;
 
     @Exported
+    @CheckForNull
     public String baseUrl;
 
     @Exported
@@ -570,7 +571,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     private URL createHostUrl(EnvVars vars) throws MalformedURLException {
         URL host;
-        if (baseUrl != null) {
+        if (baseUrl != null && !baseUrl.isEmpty()) {
             host = new URL(vars.expand(baseUrl));
         } else {
             host = new URL(DEFAULT_HOCKEY_URL);
@@ -812,8 +813,12 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
         @SuppressWarnings("unused")
         public FormValidation doCheckBaseUrl(@QueryParameter String value) {
-            if (value.isEmpty()) {
-                return FormValidation.error("You must enter a URL.");
+            if (value == null || value.isEmpty()) {
+                return FormValidation.ok();
+            } else if (!(value.startsWith("http://") || value.startsWith("https://"))) {
+                return FormValidation.error("Must use http or https protocol.");
+            } else if (value.endsWith("/")) {
+                return FormValidation.error("Must not end with / character.");
             } else {
                 return FormValidation.ok();
             }
