@@ -21,7 +21,7 @@ public class ConfigurationTest {
     private FreeStyleProject project;
 
     @Test
-    public void should_ConfigureWithDefaults_Success() throws Exception {
+    public void should_Configure_WithDefaults_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder().create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
@@ -36,7 +36,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void should_ConfigureWithOlderVersion_Success() throws Exception {
+    public void should_Configure_WithOlderVersion_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder()
                 .setOldVersionHolder(new HockeyappApplication.OldVersionHolder(
@@ -57,7 +57,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void should_ConfigureMultipleApps_Success() throws Exception {
+    public void should_Configure_WithMultipleApps_Success() throws Exception {
         // Given
         final List<HockeyappApplication> applications = Arrays.asList(
                 new HockeyappApplicationBuilder()
@@ -77,7 +77,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void should_ConfigureWithDebugMode_Success() throws Exception {
+    public void should_Configure_WithDebugMode_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder().create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
@@ -93,7 +93,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void should_ConfigureWithFailGracefully_Success() throws Exception {
+    public void should_Configure_WithFailGracefully_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder().create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
@@ -109,7 +109,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void should_ConfigureWithBaseUrl_Success() throws Exception {
+    public void should_Configure_WithBaseUrl_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder().create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
@@ -125,7 +125,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void should_ConfigureWithBaseUrl_AndDebugMode_AndFailGracefully_Success() throws Exception {
+    public void should_Configure_WithBaseUrl_AndDebugMode_AndFailGracefully_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder().create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
