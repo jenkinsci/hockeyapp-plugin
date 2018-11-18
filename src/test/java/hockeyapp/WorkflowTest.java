@@ -6,9 +6,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static hockeyapp.builder.HockeyappApplicationBuilder.FILE_PATH;
-
 
 public class WorkflowTest extends ProjectTest {
     private WorkflowJob workflowJob;
@@ -25,7 +27,7 @@ public class WorkflowTest extends ProjectTest {
                 "   applications: [\n" +
                 "       [$class: 'HockeyappApplication', \n" +
                 "        apiToken: 'API_TOKEN',\n" +
-                "        filePath: '"+ FILE_PATH + "',\n" +
+                "        filePath: '" + FILE_PATH + "',\n" +
                 "        uploadMethod: [$class: 'AppCreation',\n" +
                 "                       publicPage: true],\n" +
                 "        releaseNotesMethod: [$class: 'NoReleaseNotes']\n" +
@@ -52,7 +54,7 @@ public class WorkflowTest extends ProjectTest {
                 "   applications: [\n" +
                 "       [$class: 'HockeyappApplication', \n" +
                 "        apiToken: 'API_TOKEN',\n" +
-                "        filePath: '"+ FILE_PATH + "',\n" +
+                "        filePath: '" + FILE_PATH + "',\n" +
                 "        uploadMethod: [$class: 'AppCreation',\n" +
                 "                       publicPage: true],\n" +
                 "        releaseNotesMethod: [$class: 'NoReleaseNotes']," +
