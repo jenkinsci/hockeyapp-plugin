@@ -131,11 +131,11 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         this.applications = Util.fixNull(applications);
     }
 
-    List<HockeyappApplication> getApplications() {
+    public List<HockeyappApplication> getApplications() {
         return applications;
     }
 
-    boolean getDebugMode() {
+    public boolean getDebugMode() {
         return debugMode;
     }
 
@@ -145,7 +145,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     @Nonnull
-    String getBaseUrl() {
+    public String getBaseUrl() {
         return baseUrl == null ? DEFAULT_HOCKEY_URL : baseUrl;
     }
 
@@ -160,7 +160,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return baseUrlHolder;
     }
 
-    boolean getFailGracefully() {
+    public boolean getFailGracefully() {
         return failGracefully;
     }
 
