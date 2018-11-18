@@ -204,7 +204,7 @@ public abstract class ProjectTest {
 
     StringValuePattern releaseNotesTypeFormData() {
         return containing("Content-Disposition: form-data; name=\"notes_type\"\r\n" +
-                "Content-Type: text/plain; charset=US-ASCII\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: 8bit");
     }
 
@@ -218,7 +218,7 @@ public abstract class ProjectTest {
 
     StringValuePattern privateFormData(boolean value) {
         return containing("Content-Disposition: form-data; name=\"private\"\r\n" +
-                "Content-Type: text/plain; charset=US-ASCII\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: 8bit\r\n" +
                 "\r\n" +
                 Boolean.toString(value));
@@ -226,7 +226,7 @@ public abstract class ProjectTest {
 
     StringValuePattern statusFormData(int value) {
         return containing("Content-Disposition: form-data; name=\"status\"\r\n" +
-                "Content-Type: text/plain; charset=US-ASCII\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: 8bit\r\n" +
                 "\r\n" +
                 Integer.toString(value));
@@ -234,7 +234,7 @@ public abstract class ProjectTest {
 
     StringValuePattern notifyFormData(int value) {
         return containing("Content-Disposition: form-data; name=\"notify\"\r\n" +
-                "Content-Type: text/plain; charset=US-ASCII\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: 8bit\r\n" +
                 "\r\n" +
                 Integer.toString(value));
@@ -242,7 +242,7 @@ public abstract class ProjectTest {
 
     StringValuePattern mandatoryFormData(int value) {
         return containing("Content-Disposition: form-data; name=\"mandatory\"\r\n" +
-                "Content-Type: text/plain; charset=US-ASCII\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
                 "Content-Transfer-Encoding: 8bit\r\n" +
                 "\r\n" +
                 Integer.toString(value));

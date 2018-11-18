@@ -48,9 +48,7 @@ public class FreestyleTest extends ProjectTest {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder().create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -77,9 +75,7 @@ public class FreestyleTest extends ProjectTest {
                         "purge"))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -100,15 +96,13 @@ public class FreestyleTest extends ProjectTest {
     }
 
     @Test
-    public void test_SendUploadRequest_WithManualReleaseNotes_Success() throws Exception {
+    public void should_SendUploadRequest_WithManualReleaseNotes_Success() throws Exception {
         // Given
         final HockeyappApplication hockeyappApplication = new HockeyappApplicationBuilder()
                 .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -134,9 +128,7 @@ public class FreestyleTest extends ProjectTest {
                 .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -154,9 +146,7 @@ public class FreestyleTest extends ProjectTest {
                 .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -175,9 +165,7 @@ public class FreestyleTest extends ProjectTest {
                 .setReleaseNotesMethod(new ManualReleaseNotes("releaseNotes", false))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -195,8 +183,7 @@ public class FreestyleTest extends ProjectTest {
                 .setUploadMethod(new VersionCreation(APP_ID))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -220,8 +207,7 @@ public class FreestyleTest extends ProjectTest {
                 .setUploadMethod(new VersionCreation(APP_ID, version))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -245,8 +231,7 @@ public class FreestyleTest extends ProjectTest {
                 .setUploadMethod(new VersionCreation(APP_ID, version))
                 .create();
         final List<HockeyappApplication> applications = Collections.singletonList(hockeyappApplication);
-        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
-        project.getPublishersList().add(hockeyappRecorder);
+        addFreeStyleJob(applications);
 
         // When
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -260,5 +245,11 @@ public class FreestyleTest extends ProjectTest {
                 .withRequestBody(notifyFormData(0))
                 .withRequestBody(statusFormData(1)));
         failOnUnmatchedRequests();
+    }
+
+    private void addFreeStyleJob(List<HockeyappApplication> applications) {
+        final HockeyappRecorder hockeyappRecorder = new HockeyappRecorder(applications);
+        hockeyappRecorder.setBaseUrl("http://localhost:" + mockHockeyAppServer.port());
+        project.getPublishersList().add(hockeyappRecorder);
     }
 }
