@@ -12,7 +12,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static hockeyapp.builder.HockeyappApplicationBuilder.FILE_PATH;
 
-public class WorkflowTest extends ProjectTest {
+public class PipelineTest extends ProjectTest {
     private WorkflowJob workflowJob;
 
     @Before
@@ -22,7 +22,7 @@ public class WorkflowTest extends ProjectTest {
     }
 
     @Test
-    public void testWorkflow() throws Exception {
+    public void should_ConfigurePipeline_WithBaseUrl() throws Exception {
         createHockeyappJob("[$class: 'HockeyappRecorder', \n" +
                 "   applications: [\n" +
                 "       [$class: 'HockeyappApplication', \n" +
@@ -49,7 +49,7 @@ public class WorkflowTest extends ProjectTest {
     }
 
     @Test
-    public void testWorkflowWithOldVersionHolder() throws Exception {
+    public void should_ConfigurePipeline_WithOldVersionHolder() throws Exception {
         createHockeyappJob("[$class: 'HockeyappRecorder', \n" +
                 "   applications: [\n" +
                 "       [$class: 'HockeyappApplication', \n" +
