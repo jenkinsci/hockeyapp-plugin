@@ -25,6 +25,7 @@ public class PipelineTest extends ProjectTest {
 
     @Test
     public void should_ConfigurePipeline_WithBaseUrl() throws Exception {
+        // Given
         createHockeyappJob("[$class: 'HockeyappRecorder', \n" +
                 "   applications: [\n" +
                 "       [$class: 'HockeyappApplication', \n" +
@@ -38,7 +39,11 @@ public class PipelineTest extends ProjectTest {
                 "   baseUrlHolder: [$class: 'hockeyapp.HockeyappRecorder$BaseUrlHolder',\n" +
                 "                   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/']\n" +
                 "]");
+
+        // When
         WorkflowRun build = Objects.requireNonNull(workflowJob.scheduleBuild2(0)).get();
+
+        // Then
         assertBuildSuccessful(build);
         mockHockeyAppServer.verify(1, postRequestedFor(urlEqualTo(HOCKEY_APP_UPLOAD_URL))
                 .withHeader("Content-Type", containing("multipart/form-data;"))
@@ -52,6 +57,7 @@ public class PipelineTest extends ProjectTest {
 
     @Test
     public void should_ConfigurePipeline_WithOldVersionHolder() throws Exception {
+        // Given
         createHockeyappJob("[$class: 'HockeyappRecorder', \n" +
                 "   applications: [\n" +
                 "       [$class: 'HockeyappApplication', \n" +
@@ -69,7 +75,11 @@ public class PipelineTest extends ProjectTest {
                 "   baseUrlHolder: [$class: 'hockeyapp.HockeyappRecorder$BaseUrlHolder',\n" +
                 "                   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/']\n" +
                 "]");
+
+        // When
         WorkflowRun build = Objects.requireNonNull(workflowJob.scheduleBuild2(0)).get();
+
+        // Then
         assertBuildSuccessful(build);
         mockHockeyAppServer.verify(1, postRequestedFor(urlEqualTo(HOCKEY_APP_UPLOAD_URL))
                 .withHeader("Content-Type", containing("multipart/form-data;"))
