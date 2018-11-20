@@ -6,6 +6,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Objects;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -36,7 +38,7 @@ public class PipelineTest extends ProjectTest {
                 "   baseUrlHolder: [$class: 'hockeyapp.HockeyappRecorder$BaseUrlHolder',\n" +
                 "                   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/']\n" +
                 "]");
-        WorkflowRun build = workflowJob.scheduleBuild2(0).get();
+        WorkflowRun build = Objects.requireNonNull(workflowJob.scheduleBuild2(0)).get();
         assertBuildSuccessful(build);
         mockHockeyAppServer.verify(1, postRequestedFor(urlEqualTo(HOCKEY_APP_UPLOAD_URL))
                 .withHeader("Content-Type", containing("multipart/form-data;"))
@@ -67,7 +69,7 @@ public class PipelineTest extends ProjectTest {
                 "   baseUrlHolder: [$class: 'hockeyapp.HockeyappRecorder$BaseUrlHolder',\n" +
                 "                   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/']\n" +
                 "]");
-        WorkflowRun build = workflowJob.scheduleBuild2(0).get();
+        WorkflowRun build = Objects.requireNonNull(workflowJob.scheduleBuild2(0)).get();
         assertBuildSuccessful(build);
         mockHockeyAppServer.verify(1, postRequestedFor(urlEqualTo(HOCKEY_APP_UPLOAD_URL))
                 .withHeader("Content-Type", containing("multipart/form-data;"))
@@ -82,11 +84,11 @@ public class PipelineTest extends ProjectTest {
         failOnUnmatchedRequests();
     }
 
-    private void createHockeyappJob(String hockeyAppInfo) throws Exception {
+    private void createHockeyappJob(String hockeyAppInfo) {
         workflowJob.setDefinition(new CpsFlowDefinition(
                 "node { \n" +
                         "writeFile file: 'test.ipa', text: '" + IPA_CONTENTS + "', encoding: 'UTF-8'\n" +
                         "step(" + hockeyAppInfo + ") \n" +
-                        "}"));
+                        "}", true));
     }
 }
