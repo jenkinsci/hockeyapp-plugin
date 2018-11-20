@@ -36,8 +36,7 @@ public class PipelineTest extends ProjectTest {
                 "        releaseNotesMethod: [$class: 'NoReleaseNotes']\n" +
                 "       ]\n" +
                 "   ],\n" +
-                "   baseUrlHolder: [$class: 'hockeyapp.HockeyappRecorder$BaseUrlHolder',\n" +
-                "                   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/']\n" +
+                "   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/'\n" +
                 "]");
 
         // When
@@ -72,8 +71,7 @@ public class PipelineTest extends ProjectTest {
                 "                           strategyOldVersions: 'purge'] \n" +
                 "       ]\n" +
                 "   ],\n" +
-                "   baseUrlHolder: [$class: 'hockeyapp.HockeyappRecorder$BaseUrlHolder',\n" +
-                "                   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/']\n" +
+                "   baseUrl: 'http://localhost:" + mockHockeyAppServer.port() + "/'\n" +
                 "]");
 
         // When
