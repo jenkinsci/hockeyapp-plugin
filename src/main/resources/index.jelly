@@ -3,5 +3,12 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin allows you to upload new versions of your Android (.apk), iOS (.ipa), and MacOS (.app) applications to hockeyapp.net.
+    This plugin allows you to upload new versions of your Android (.apk), iOS (.ipa), and MacOS (.app) applications to
+    hockeyapp.net.
+    <br/>
+    <br/>
+    <div style="color:red;">Important: If you are upgrading from a version prior to 1.4.0 and use a custom / self hosted
+        HockeyApp baseUrl read the
+        <a href="https://wiki.jenkins.io/display/JENKINS/HockeyApp+Plugin">plugin release notes</a>.
+    </div>
 </div>
