@@ -66,7 +66,12 @@ public class CredentialUtils {
         );
 
         for (HockeyappApplication hockeyappApplication : hockeyappRecorder.getApplications()) {
-            final String credentialId = storeCredential(hockeyappRecorder, existingCredentials, hockeyappApplication.apiToken);
+            final String apiToken = hockeyappApplication.apiToken;
+            if (apiToken == null) {
+                continue; // No point migrating a token that doesn't exist.
+            }
+
+            final String credentialId = storeCredential(hockeyappRecorder, existingCredentials, apiToken);
 
             hockeyappApplication.apiToken = null;
             hockeyappApplication.setCredentialId(credentialId);
