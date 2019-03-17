@@ -32,7 +32,11 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @Deprecated
     public long schemaVersion; // TODO: Fix Findbugs gracefully.
 
-    public String apiToken;
+    /**
+     * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
+     */
+    @Deprecated
+    public transient String apiToken;
 
     @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
     @Deprecated
@@ -48,15 +52,17 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     public OldVersionHolder oldVersionHolder;
     public RadioButtonSupport releaseNotesMethod;
     public RadioButtonSupport uploadMethod;
+    private String credentialId;
 
     @DataBoundConstructor
-    public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
+    public HockeyappApplication(String apiToken, String credentialId, String appId, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
                                 String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
         this.schemaVersion = SCHEMA_VERSION_NUMBER;
         this.apiToken = Util.fixEmptyAndTrim(apiToken);
+        this.credentialId = credentialId;
         this.appId = Util.fixEmptyAndTrim(appId);
         this.notifyTeam = notifyTeam;
         this.filePath = Util.fixEmptyAndTrim(filePath);
@@ -96,6 +102,14 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @Override
     public Descriptor<HockeyappApplication> getDescriptor() {
         return new DescriptorImpl();
+    }
+
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
     }
 
     public static class OldVersionHolder {
