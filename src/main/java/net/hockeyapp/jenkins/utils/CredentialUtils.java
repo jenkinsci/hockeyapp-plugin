@@ -32,7 +32,7 @@ import java.util.List;
 public class CredentialUtils {
 
     private static CredentialUtils instance;
-    private final String DEFAULT_TOKEN_NAME = "HockeyApp-API-Token";
+    private final String DEFAULT_TOKEN_NAME = "hockeyapp-api-token";
 
     private CredentialUtils() {
     }
