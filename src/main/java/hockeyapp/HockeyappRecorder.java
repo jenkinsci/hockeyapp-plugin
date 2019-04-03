@@ -747,10 +747,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Symbol("hockeyApp")
     @Extension
-    // This indicates to Jenkins that this is an implementation of an extension
-    // point.
-    public static final class DescriptorImpl extends
-            BuildStepDescriptor<Publisher> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         private String defaultToken;
         private boolean globalDebugMode = false;
         private String timeout;
