@@ -98,7 +98,12 @@ import java.util.regex.Pattern;
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     public static final long SCHEMA_VERSION_NUMBER = 2L;
-    public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
+
+    /**
+     * @deprecated Prefer {@link DescriptorImpl#DEFAULT_HOCKEY_URL}} instead.
+     */
+    @Deprecated
+    public static final String DEFAULT_HOCKEY_URL = DescriptorImpl.DEFAULT_HOCKEY_URL;
     public static final int DEFAULT_TIMEOUT = 60000;
     private static final String UTF8 = "UTF-8";
     private static final Charset DEFAULT_CHARACTER_SET = StandardCharsets.UTF_8;
@@ -146,7 +151,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Nonnull
     public String getBaseUrl() {
-        return baseUrl == null ? DEFAULT_HOCKEY_URL : baseUrl;
+        return baseUrl == null ? DescriptorImpl.DEFAULT_HOCKEY_URL : baseUrl;
     }
 
     @DataBoundSetter
@@ -748,6 +753,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Symbol("hockeyApp")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+        public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
+
         private String defaultToken;
         private boolean globalDebugMode = false;
         private String timeout;
