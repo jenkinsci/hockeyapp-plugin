@@ -96,6 +96,33 @@ public class CredentialUtils {
     }
 
     /**
+     * Migrates the credential stored in global config from the old insecure format to the Credential system.
+     *
+     * @param descriptor The descriptor of this plugin.
+     * @throws IOException If there was an error whilst migrating the credential.
+     */
+    public void migrateGlobalCredential(HockeyappRecorder.DescriptorImpl descriptor) throws IOException {
+        final String defaultToken = descriptor.getDefaultToken();
+        final String defaultHockeyUrl = descriptor.getDefaultBaseUrl();
+
+        if (defaultToken == null) {
+            return; // N point migrating a token that doesn't exist.
+        }
+
+        List<StringCredentials> existingCredentials = CredentialsProvider.lookupCredentials(
+                StringCredentials.class,
+                Jenkins.getInstance(),
+                ACL.SYSTEM,
+                requirements(defaultHockeyUrl)
+        );
+
+        String credentialId = storeCredential(existingCredentials, defaultHockeyUrl, defaultToken);
+
+        descriptor.setDefaultToken(null);
+        descriptor.setCredentialId(credentialId);
+    }
+
+    /**
      * Migrates the credential stored in a job config from the old insecure format to the Credential system.
      *
      * @param item              The job where the plugin is configured.

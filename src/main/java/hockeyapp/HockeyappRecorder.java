@@ -31,6 +31,7 @@ import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
 import net.hockeyapp.jenkins.uploadMethod.AppCreation;
 import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
+import net.hockeyapp.jenkins.utils.CredentialUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.iterators.ArrayIterator;
@@ -759,27 +760,51 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         static final String DEFAULT_BASE_URL = "https://rink.hockeyapp.net";
 
-        private String defaultToken; // TODO: Change the naming to global and deprecate the getter / setter
+        /**
+         * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
+         */
+        @Deprecated
+        private transient String defaultToken; // TODO: Change the naming to global and deprecate the getter / setter
         private boolean globalDebugMode = false;
         private String timeout; // TODO: Change the naming to global and deprecate the getter / setter
+        private String credentialId;
 
         public DescriptorImpl() {
             super(HockeyappRecorder.class);
             load();
+
+            if (Util.fixEmpty(getDefaultToken()) != null) {
+                try {
+                    CredentialUtils.getInstance().migrateGlobalCredential(this);
+                    save();
+                } catch (IOException ioe) {
+                    LOGGER.log(Level.SEVERE, "Unable to migrate globally stored auth token to a credential", ioe);
+                }
+            }
         }
 
         public String getDefaultBaseUrl() {
             return DEFAULT_BASE_URL;
         }
 
+        @Deprecated
         public String getDefaultToken() {
             return defaultToken;
         }
 
         @SuppressWarnings("unused") // Used by Jenkins
+        @Deprecated
         public void setDefaultToken(String defaultToken) {
             this.defaultToken = Util.fixEmptyAndTrim(defaultToken);
             save(); // TODO: Remove this. Operation done on configure.
+        }
+
+        public String getCredentialId() {
+            return credentialId;
+        }
+
+        public void setCredentialId(String credentialId) {
+            this.credentialId = credentialId;
         }
 
         public boolean getGlobalDebugMode() {
