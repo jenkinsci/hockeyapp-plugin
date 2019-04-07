@@ -102,10 +102,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public static final long SCHEMA_VERSION_NUMBER = 2L;
 
     /**
-     * @deprecated Prefer {@link DescriptorImpl#DEFAULT_HOCKEY_URL}} instead.
+     * @deprecated Prefer {@link DescriptorImpl#DEFAULT_BASE_URL}} instead.
      */
     @Deprecated
-    public static final String DEFAULT_HOCKEY_URL = DescriptorImpl.DEFAULT_HOCKEY_URL;
+    public static final String DEFAULT_HOCKEY_URL = DescriptorImpl.DEFAULT_BASE_URL;
     public static final int DEFAULT_TIMEOUT = 60000;
     private static final Logger LOGGER = Logger.getLogger(HockeyappRecorder.class.getName());
     private static final String UTF8 = "UTF-8";
@@ -154,7 +154,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Nonnull
     public String getBaseUrl() {
-        return baseUrl == null ? DescriptorImpl.DEFAULT_HOCKEY_URL : baseUrl;
+        return baseUrl == null ? DescriptorImpl.DEFAULT_BASE_URL : baseUrl;
     }
 
     @DataBoundSetter
@@ -756,7 +756,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Symbol("hockeyApp")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-        static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
+        static final String DEFAULT_BASE_URL = "https://rink.hockeyapp.net";
 
         private String defaultToken; // TODO: Change the naming to global and deprecate the getter / setter
         private boolean globalDebugMode = false;
@@ -767,8 +767,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             load();
         }
 
-        public String getDefaultHockeyUrl() {
-            return DEFAULT_HOCKEY_URL;
+        public String getDefaultBaseUrl() {
+            return DEFAULT_BASE_URL;
         }
 
         public String getDefaultToken() {
