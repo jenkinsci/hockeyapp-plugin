@@ -767,6 +767,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             load();
         }
 
+        public String getDefaultHockeyUrl() {
+            return DEFAULT_HOCKEY_URL;
+        }
+
         public String getDefaultToken() {
             return defaultToken;
         }
