@@ -159,7 +159,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setBaseUrl(@Nonnull String baseUrl) {
-        this.baseUrl = baseUrl.isEmpty() ? null : baseUrl;
+        final boolean isSameAsDefault = baseUrl.equals(getDescriptor().getDefaultBaseUrl());
+        this.baseUrl = baseUrl.isEmpty() || isSameAsDefault ? null : baseUrl;
     }
 
     @Deprecated
