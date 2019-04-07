@@ -17,6 +17,7 @@ import net.hockeyapp.jenkins.releaseNotes.NoReleaseNotes;
 import net.hockeyapp.jenkins.uploadMethod.AppCreation;
 import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -33,7 +34,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     public long schemaVersion; // TODO: Fix Findbugs gracefully.
 
     /**
-     * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
+     * @deprecated Use {@link HockeyappApplication#getCredentialId()}} instead. This field only exists for upgrade purposes.
      */
     @Deprecated
     public transient String apiToken;
@@ -52,18 +53,38 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     public OldVersionHolder oldVersionHolder;
     public RadioButtonSupport releaseNotesMethod;
     public RadioButtonSupport uploadMethod;
+
     private String credentialId;
 
-    @DataBoundConstructor
-    public HockeyappApplication(String apiToken, String credentialId, String appId, boolean notifyTeam,
+    @Deprecated
+    public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
                                 String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
         this.schemaVersion = SCHEMA_VERSION_NUMBER;
         this.apiToken = Util.fixEmptyAndTrim(apiToken);
-        this.credentialId = credentialId;
         this.appId = Util.fixEmptyAndTrim(appId);
+        this.notifyTeam = notifyTeam;
+        this.filePath = Util.fixEmptyAndTrim(filePath);
+        this.dsymPath = Util.fixEmptyAndTrim(dsymPath);
+        this.libsPath = Util.fixEmptyAndTrim(libsPath);
+        this.tags = Util.fixEmptyAndTrim(tags);
+        this.downloadAllowed = downloadAllowed;
+        this.oldVersionHolder = oldVersionHolder;
+        this.releaseNotesMethod = releaseNotesMethod;
+        this.uploadMethod = uploadMethod;
+        this.teams = Util.fixEmptyAndTrim(teams);
+        this.mandatory = mandatory;
+    }
+
+    @DataBoundConstructor
+    public HockeyappApplication(String credentialId, boolean notifyTeam,
+                                String filePath, String dsymPath, String libsPath,
+                                String tags, String teams, boolean mandatory,
+                                boolean downloadAllowed, OldVersionHolder oldVersionHolder,
+                                RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
+        this.credentialId = credentialId;
         this.notifyTeam = notifyTeam;
         this.filePath = Util.fixEmptyAndTrim(filePath);
         this.dsymPath = Util.fixEmptyAndTrim(dsymPath);
@@ -87,6 +108,15 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         return uploadMethod;
     }
 
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    @DataBoundSetter
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
+    }
+
     public String getNumberOldVersions() {
         return oldVersionHolder == null ? null : oldVersionHolder.numberOldVersions;
     }
@@ -102,14 +132,6 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @Override
     public Descriptor<HockeyappApplication> getDescriptor() {
         return new DescriptorImpl();
-    }
-
-    public String getCredentialId() {
-        return credentialId;
-    }
-
-    public void setCredentialId(String credentialId) {
-        this.credentialId = credentialId;
     }
 
     public static class OldVersionHolder {

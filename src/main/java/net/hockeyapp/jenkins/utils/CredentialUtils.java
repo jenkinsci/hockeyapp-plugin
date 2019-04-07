@@ -58,12 +58,6 @@ public class CredentialUtils {
     @SuppressWarnings("deprecation")
     public void migrateJobCredential(final Item item, final HockeyappRecorder hockeyappRecorder) throws IOException {
         final String baseUrl = hockeyappRecorder.getBaseUrl();
-        final List<StringCredentials> existingCredentials = CredentialsProvider.lookupCredentials(
-                StringCredentials.class,
-                item,
-                ACL.SYSTEM,
-                requirements(baseUrl)
-        );
 
         for (HockeyappApplication hockeyappApplication : hockeyappRecorder.getApplications()) {
             final String apiToken = hockeyappApplication.apiToken;
@@ -71,15 +65,23 @@ public class CredentialUtils {
                 continue; // No point migrating a token that doesn't exist.
             }
 
-            final String credentialId = storeCredential(hockeyappRecorder, existingCredentials, apiToken);
+            final String credentialId = storeCredential(item, baseUrl, apiToken);
 
             hockeyappApplication.apiToken = null;
             hockeyappApplication.setCredentialId(credentialId);
         }
     }
 
-    private String storeCredential(final HockeyappRecorder hockeyappRecorder, final List<StringCredentials> existingCredentials, final String apiToken) throws IOException {
+    private String storeCredential(final Item item, final String baseUrl, final String apiToken) throws IOException {
+        final List<StringCredentials> existingCredentials = CredentialsProvider.lookupCredentials(
+                StringCredentials.class,
+                item,
+                ACL.SYSTEM,
+                requirements(baseUrl)
+        );
+
         final List<String> existingIds = new ArrayList<>();
+
         for (StringCredentials credential : existingCredentials) {
             existingIds.add(credential.getId());
             if (credential.getId().startsWith(DEFAULT_TOKEN_NAME) && apiToken.equals(Secret.toString(credential.getSecret()))) {
@@ -90,10 +92,10 @@ public class CredentialUtils {
 
         final CredentialsStore store = CredentialsProvider.lookupStores(Jenkins.getInstance()).iterator().next();
         final String id = generateCredentialId(existingIds);
-        final BaseStandardCredentials credential = new StringCredentialsImpl(CredentialsScope.GLOBAL, id, id, Secret.fromString(apiToken));
+        final String description = "Automatically migrated. Identify usage and apply a more meaningful id and description.";
+        final BaseStandardCredentials credential = new StringCredentialsImpl(CredentialsScope.GLOBAL, id, description, Secret.fromString(apiToken));
 
         if (store.isDomainsModifiable()) {
-            final String baseUrl = hockeyappRecorder.getBaseUrl();
             final Domain domain = store.getDomainByName(baseUrl);
             if (domain == null) {
                 // If we don't have a domain in the store for our credential, create a domain and the credential at the same time.
@@ -125,6 +127,6 @@ public class CredentialUtils {
     }
 
     private List<DomainRequirement> requirements(String baseUrl) {
-        return URIRequirementBuilder.fromUri(baseUrl).build();
+        return URIRequirementBuilder.create().withHostname(baseUrl).build();
     }
 }
