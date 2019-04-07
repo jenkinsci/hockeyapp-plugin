@@ -112,21 +112,21 @@ public class CredentialUtils {
                 continue; // No point migrating a token that doesn't exist.
             }
 
-            final String credentialId = storeCredential(item, baseUrl, apiToken);
+            final List<StringCredentials> existingCredentials = CredentialsProvider.lookupCredentials(
+                    StringCredentials.class,
+                    item,
+                    ACL.SYSTEM,
+                    requirements(baseUrl)
+            );
+
+            final String credentialId = storeCredential(existingCredentials, baseUrl, apiToken);
 
             hockeyappApplication.apiToken = null;
             hockeyappApplication.setCredentialId(credentialId);
         }
     }
 
-    private String storeCredential(final Item item, final String baseUrl, final String apiToken) throws IOException {
-        final List<StringCredentials> existingCredentials = CredentialsProvider.lookupCredentials(
-                StringCredentials.class,
-                item,
-                ACL.SYSTEM,
-                requirements(baseUrl)
-        );
-
+    private String storeCredential(final List<StringCredentials> existingCredentials, final String baseUrl, final String apiToken) throws IOException {
         final List<String> existingIds = new ArrayList<>();
 
         for (StringCredentials credential : existingCredentials) {
