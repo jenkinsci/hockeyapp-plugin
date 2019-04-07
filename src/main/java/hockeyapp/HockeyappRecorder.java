@@ -154,7 +154,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     @Nonnull
     public String getBaseUrl() {
-        return baseUrl == null ? DescriptorImpl.DEFAULT_BASE_URL : baseUrl;
+        return baseUrl == null ? getDescriptor().getDefaultBaseUrl() : baseUrl;
     }
 
     @DataBoundSetter
