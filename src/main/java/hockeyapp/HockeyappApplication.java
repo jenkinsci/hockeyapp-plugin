@@ -4,9 +4,12 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractProject;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
@@ -16,6 +19,8 @@ import net.hockeyapp.jenkins.releaseNotes.ManualReleaseNotes;
 import net.hockeyapp.jenkins.releaseNotes.NoReleaseNotes;
 import net.hockeyapp.jenkins.uploadMethod.AppCreation;
 import net.hockeyapp.jenkins.uploadMethod.VersionCreation;
+import net.hockeyapp.jenkins.utils.CredentialUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -191,7 +196,6 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
             return uploadMethods;
         }
 
-
         @SuppressWarnings("unused")
         public FormValidation doCheckApiToken(@QueryParameter String value) {
             if (value.isEmpty()) {
@@ -212,6 +216,16 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
             } else {
                 return FormValidation.ok();
             }
+        }
+
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
+            // TODO: See what this does with more than one publisher in the job
+            final HockeyappRecorder describable = ((AbstractProject<?, ?>) item).getPublishersList().get(HockeyappRecorder.class);
+            final String baseUrl = describable.getBaseUrl();
+
+            // Permission checks are implemented in CredentialUtils
+            return CredentialUtils.getInstance().getAvailableCredentials(item, credentialId, baseUrl);
         }
 
         @SuppressWarnings("unused")

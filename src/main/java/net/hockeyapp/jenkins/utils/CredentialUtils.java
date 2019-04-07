@@ -3,6 +3,7 @@ package net.hockeyapp.jenkins.utils;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
@@ -13,12 +14,17 @@ import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import hockeyapp.HockeyappApplication;
 import hockeyapp.HockeyappRecorder;
 import hudson.model.Item;
+import hudson.model.Queue;
+import hudson.model.queue.Tasks;
 import hudson.security.ACL;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 
+import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +52,47 @@ public class CredentialUtils {
             }
         }
         return instance;
+    }
+
+    /**
+     * Retrieves the UI model object containing all acceptable credentials. This method can operate in two modes.
+     *
+     * <ul>
+     * <li>When item is null: in this case the credentials will be looked up globally. In this case the assumption
+     * is that we are displaying the credential dropdown on the global config page.</li>
+     * <li>When item is not null: in this case the credentials will be looked up within the context of the job. In
+     * this case the assumption is that we are displaying the credential dropdown on the job config page.</li>
+     * </ul>
+     *
+     * @param item         The context (job) to use to find the the credentials. May be null. In job config mode, the current
+     *                     value of the credential setting will be extracted from this item.
+     * @param credentialId In global config mode, use this as the currently selected credential.
+     * @param server       The URL to the server to ensure that we find the credentials under the right security
+     *                     domain.
+     * @return The UI model containing all matching credentials, or only the current selection if the user does not have
+     * the right set of permissions.
+     */
+    public ListBoxModel getAvailableCredentials(@CheckForNull final Item item, final String credentialId, final String server) {
+        StandardListBoxModel model = new StandardListBoxModel();
+
+        if (!hasPermissionToConfigureCredentials(item)) {
+            return new StandardListBoxModel().includeCurrentValue(credentialId);
+        }
+
+        Authentication credentialAuthentication = item instanceof Queue.Task ?
+                Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM;
+
+        if (item == null) {
+            model.includeAs(credentialAuthentication, Jenkins.getInstance(), StringCredentials.class, requirements(server));
+        } else {
+            model.includeAs(credentialAuthentication, item, StringCredentials.class, requirements(server));
+        }
+
+        if (credentialId != null) {
+            model.includeCurrentValue(credentialId);
+        }
+
+        return model.includeEmptyValue();
     }
 
     /**
@@ -116,7 +163,19 @@ public class CredentialUtils {
         return credential.getId();
     }
 
-    private String generateCredentialId(List<String> existingIds) {
+    private boolean hasPermissionToConfigureCredentials(@CheckForNull final Item item) {
+        if (item == null) {
+            return Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER);
+        }
+
+        final boolean canReadAndUse = item.hasPermission(Item.EXTENDED_READ) && item.hasPermission(CredentialsProvider.USE_ITEM);
+        final boolean canConfigure = item.hasPermission(Item.CONFIGURE);
+
+        return canReadAndUse || canConfigure;
+
+    }
+
+    private String generateCredentialId(final List<String> existingIds) {
         // Users may already have a credential id with this name so try and account for this.
         String candidate = DEFAULT_TOKEN_NAME;
         int i = 2;
@@ -126,7 +185,7 @@ public class CredentialUtils {
         return candidate;
     }
 
-    private List<DomainRequirement> requirements(String baseUrl) {
+    private List<DomainRequirement> requirements(final String baseUrl) {
         return URIRequirementBuilder.create().withHostname(baseUrl).build();
     }
 }
