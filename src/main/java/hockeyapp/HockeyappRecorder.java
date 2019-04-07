@@ -779,7 +779,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         @SuppressWarnings("unused") // Used by Jenkins
         public void setDefaultToken(String defaultToken) {
             this.defaultToken = Util.fixEmptyAndTrim(defaultToken);
-            save();
+            save(); // TODO: Remove this. Operation done on configure.
         }
 
         public boolean getGlobalDebugMode() {
@@ -790,7 +790,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         @SuppressWarnings("unused") // Used by Jenkins
         public void setGlobalDebugMode(boolean globalDebugMode) {
             this.globalDebugMode = globalDebugMode;
-            save();
+            save(); // TODO: Remove this. Operation done on configure.
         }
 
         @SuppressWarnings("unused")
@@ -801,7 +801,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         @SuppressWarnings("unused")
         public void setTimeout(String timeout) {
             this.timeout = Util.fixEmptyAndTrim(timeout);
-            save();
+            save(); // TODO: Remove this. Operation done on configure.
         }
 
         public int getTimeoutInt() {
