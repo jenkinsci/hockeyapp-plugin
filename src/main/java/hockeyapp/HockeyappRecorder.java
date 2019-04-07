@@ -823,11 +823,11 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject json) {
-            // XXX is this now the right style?
-            req.bindJSON(this, json);
+        public boolean configure(StaplerRequest request, JSONObject formData) throws FormException {
+            request.bindJSON(this, formData);
+
             save();
-            return true;
+            return super.configure(request, formData);
         }
 
         /**
