@@ -755,9 +755,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
 
-        private String defaultToken;
+        private String defaultToken; // TODO: Change the naming to global and deprecate the getter / setter
         private boolean globalDebugMode = false;
-        private String timeout;
+        private String timeout; // TODO: Change the naming to global and deprecate the getter / setter
 
         public DescriptorImpl() {
             super(HockeyappRecorder.class);
