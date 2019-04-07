@@ -24,6 +24,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.util.RunList;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
@@ -66,6 +67,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -190,8 +192,9 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     // Not a getter since build has to know proper value
     public String fetchApiToken(HockeyappApplication application) {
+        // TODO: Get from credentials plugin here?
         if (application.apiToken == null) {
-            return getDescriptor().getDefaultToken();
+            return getDescriptor().getDefaultToken(); // TODO: Don't need this if using credentials plugin as it is all global anyway?
         } else {
             return application.apiToken;
         }
@@ -862,6 +865,16 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         @Override
         public String getDisplayName() {
             return Messages.UPLOAD_TO_HOCKEYAPP();
+        }
+
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
+            final Jenkins jenkins = Jenkins.getInstance();
+            final HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor = jenkins.getDescriptorByType(HockeyappRecorder.DescriptorImpl.class);
+            final String defaultBaseUrl = hockeyappRecorderDescriptor.getDefaultBaseUrl();
+
+            // Permission checks are implemented in CredentialUtils
+            return CredentialUtils.getInstance().getAvailableCredentials(item, credentialId, defaultBaseUrl);
         }
 
         @SuppressWarnings("unused")
