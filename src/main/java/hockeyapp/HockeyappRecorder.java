@@ -753,7 +753,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Symbol("hockeyApp")
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-        public static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
+        static final String DEFAULT_HOCKEY_URL = "https://rink.hockeyapp.net";
 
         private String defaultToken;
         private boolean globalDebugMode = false;
