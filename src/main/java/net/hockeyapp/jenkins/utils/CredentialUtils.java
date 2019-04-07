@@ -92,7 +92,7 @@ public class CredentialUtils {
 
         final CredentialsStore store = CredentialsProvider.lookupStores(Jenkins.getInstance()).iterator().next();
         final String id = generateCredentialId(existingIds);
-        final String description = "Automatically migrated. Identify usage and apply a more meaningful id and description.";
+        final String description = String.format("%s. Automatically migrated. Identify usage and apply a more meaningful id and description.", id);
         final BaseStandardCredentials credential = new StringCredentialsImpl(CredentialsScope.GLOBAL, id, description, Secret.fromString(apiToken));
 
         if (store.isDomainsModifiable()) {
