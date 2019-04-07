@@ -93,6 +93,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
@@ -105,6 +107,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     @Deprecated
     public static final String DEFAULT_HOCKEY_URL = DescriptorImpl.DEFAULT_HOCKEY_URL;
     public static final int DEFAULT_TIMEOUT = 60000;
+    private static final Logger LOGGER = Logger.getLogger(HockeyappRecorder.class.getName());
     private static final String UTF8 = "UTF-8";
     private static final Charset DEFAULT_CHARACTER_SET = StandardCharsets.UTF_8;
     private static final ContentType DEFAULT_CONTENT_TYPE = ContentType.create("text/plain", Consts.UTF_8);
