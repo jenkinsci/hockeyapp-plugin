@@ -106,7 +106,7 @@ public class CredentialUtils {
         final String defaultHockeyUrl = descriptor.getDefaultBaseUrl();
 
         if (defaultToken == null) {
-            return; // N point migrating a token that doesn't exist.
+            return; // No point migrating a token that doesn't exist.
         }
 
         List<StringCredentials> existingCredentials = CredentialsProvider.lookupCredentials(
