@@ -84,6 +84,7 @@ public class CredentialUtils {
 
         if (item == null) {
             model.includeAs(credentialAuthentication, Jenkins.getInstance(), StringCredentials.class, requirements(server));
+            model.includeEmptyValue();
         } else {
             model.includeAs(credentialAuthentication, item, StringCredentials.class, requirements(server));
         }
@@ -92,7 +93,7 @@ public class CredentialUtils {
             model.includeCurrentValue(credentialId);
         }
 
-        return model.includeEmptyValue();
+        return model;
     }
 
     /**
