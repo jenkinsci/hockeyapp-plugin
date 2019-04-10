@@ -84,7 +84,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -334,7 +333,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
                     HttpInfo info = getHttpInfo(logger, vars, application);
                     String path = info.getPath();
-                    URL host = createHostUrl(vars);
+                    final String baseUrl = vars.expand(getBaseUrl());
+                    final URL host = new URL(baseUrl);
                     URL url = new URL(host, path);
 
                     HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
@@ -603,16 +603,6 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             }
         }
         return null;
-    }
-
-    private URL createHostUrl(EnvVars vars) throws MalformedURLException {
-        URL host;
-        if (baseUrl != null && !baseUrl.isEmpty()) {
-            host = new URL(vars.expand(baseUrl));
-        } else {
-            host = new URL(DEFAULT_HOCKEY_URL);
-        }
-        return host;
     }
 
     private void printUploadSpeed(long duration, float fileSize, PrintStream logger) {
