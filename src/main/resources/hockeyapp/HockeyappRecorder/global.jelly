@@ -2,8 +2,8 @@
 <j:jelly xmlns:j="jelly:core"
          xmlns:f="/lib/form"
          xmlns:c="/lib/credentials">
-    <f:section title="${%Default HockeyApp Configuration}">
-        <f:entry title="${%Credentials}" field="credentialId">
+    <f:section title="${%Global HockeyApp Configuration}">
+        <f:entry title="${%Credentials}" field="globalCredentialId">
             <c:select/>
         </f:entry>
         <f:entry title="${%HTTP Client Timeout}" field="timeout">

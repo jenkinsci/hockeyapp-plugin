@@ -754,13 +754,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         static final String DEFAULT_BASE_URL = "https://rink.hockeyapp.net";
 
         /**
-         * @deprecated Use {@link #credentialId} instead. This field only exists for upgrade purposes.
+         * @deprecated Use {@link #globalCredentialId} instead. This field only exists for upgrade purposes.
          */
         @Deprecated
-        private transient String defaultToken; // TODO: Change the naming to global and deprecate the getter / setter
+        private transient String defaultToken;
         private boolean globalDebugMode = false;
         private String timeout; // TODO: Change the naming to global and deprecate the getter / setter
-        private String credentialId;
+        private String globalCredentialId;
 
         public DescriptorImpl() {
             super(HockeyappRecorder.class);
@@ -792,12 +792,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             save(); // TODO: Remove this. Operation done on configure.
         }
 
-        public String getCredentialId() {
-            return credentialId;
+        @CheckForNull
+        public String getGlobalCredentialId() {
+            return globalCredentialId;
         }
 
-        public void setCredentialId(String credentialId) {
-            this.credentialId = credentialId;
+        public void setGlobalCredentialId(String globalCredentialId) {
+            this.globalCredentialId = globalCredentialId;
         }
 
         public boolean getGlobalDebugMode() {

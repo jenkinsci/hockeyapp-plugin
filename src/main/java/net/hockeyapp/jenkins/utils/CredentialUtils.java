@@ -117,10 +117,10 @@ public class CredentialUtils {
                 requirements(defaultHockeyUrl)
         );
 
-        String credentialId = storeCredential(existingCredentials, defaultHockeyUrl, defaultToken);
+        String globalCrendentialId = storeCredential(existingCredentials, defaultHockeyUrl, defaultToken);
 
         descriptor.setDefaultToken(null);
-        descriptor.setCredentialId(credentialId);
+        descriptor.setGlobalCredentialId(globalCrendentialId);
     }
 
     /**
