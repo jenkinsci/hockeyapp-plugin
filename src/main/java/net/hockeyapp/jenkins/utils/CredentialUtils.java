@@ -176,7 +176,7 @@ public class CredentialUtils {
                 final List<DomainSpecification> specs = new ArrayList<>();
                 specs.add(new HostnameSpecification(baseUrl, null));
                 specs.add(new SchemeSpecification("https"));
-                final Domain newDomain = new Domain(baseUrl, null, specs);
+                final Domain newDomain = new Domain(baseUrl, "HockeyApp", specs);
                 store.addDomain(newDomain, credential);
             } else {
                 // Otherwise we have a domain so add the credential.
