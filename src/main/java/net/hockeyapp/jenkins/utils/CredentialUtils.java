@@ -170,13 +170,15 @@ public class CredentialUtils {
         final BaseStandardCredentials credential = new StringCredentialsImpl(CredentialsScope.GLOBAL, id, description, Secret.fromString(apiToken));
 
         if (store.isDomainsModifiable()) {
+            final String domainName = "HockeyApp";
+            final String domainDescription = "Automatically created domain. Identify usage and apply a more meaningful name and description.";
             final Domain domain = store.getDomainByName(baseUrl);
             if (domain == null) {
                 // If we don't have a domain in the store for our credential, create a domain and the credential at the same time.
                 final List<DomainSpecification> specs = new ArrayList<>();
                 specs.add(new HostnameSpecification(baseUrl, null));
                 specs.add(new SchemeSpecification("https"));
-                final Domain newDomain = new Domain(baseUrl, "HockeyApp", specs);
+                final Domain newDomain = new Domain(domainName, domainDescription, specs);
                 store.addDomain(newDomain, credential);
             } else {
                 // Otherwise we have a domain so add the credential.
