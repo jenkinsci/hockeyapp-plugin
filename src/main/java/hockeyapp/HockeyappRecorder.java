@@ -355,7 +355,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     entity.addPart("ipa", fileBody);
 
                     if (application.dsymPath != null && !vars.expand(application.dsymPath).isEmpty()) {
-                        FilePath remoteDsymFiles[] = remoteWorkspace.list(vars.expand(application.dsymPath));
+                        FilePath[] remoteDsymFiles = remoteWorkspace.list(vars.expand(application.dsymPath));
                         // Take the first one that matches the pattern
                         if (remoteDsymFiles.length == 0) {
                             logger.println("No dSYM found to upload in: " + vars.expand(application.dsymPath));
@@ -368,7 +368,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                     }
 
                     if (application.libsPath != null && !vars.expand(application.libsPath).isEmpty()) {
-                        FilePath remoteLibsFiles[] = remoteWorkspace.list(vars.expand(application.libsPath));
+                        FilePath[] remoteLibsFiles = remoteWorkspace.list(vars.expand(application.libsPath));
                         // Take the first one that matches the pattern
                         if (remoteLibsFiles.length == 0) {
                             logger.println("No LIBS found to upload in: " + vars.expand(application.libsPath));
