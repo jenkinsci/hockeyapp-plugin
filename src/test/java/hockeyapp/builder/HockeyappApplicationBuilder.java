@@ -9,6 +9,7 @@ public class HockeyappApplicationBuilder {
     public static final String FILE_PATH = "test.ipa";
 
     private String apiToken = "API_TOKEN";
+    private String credentialId = "CREDENTIAL_ID";
     private String appId = null;
     private boolean notifyTeam = false;
     private String filePath = FILE_PATH;
@@ -24,6 +25,11 @@ public class HockeyappApplicationBuilder {
 
     public HockeyappApplicationBuilder setApiToken(String apiToken) {
         this.apiToken = apiToken;
+        return this;
+    }
+
+    public HockeyappApplicationBuilder setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
         return this;
     }
 
@@ -88,6 +94,6 @@ public class HockeyappApplicationBuilder {
     }
 
     public HockeyappApplication create() {
-        return new HockeyappApplication(apiToken, appId, notifyTeam, filePath, dsymPath, libsPath, tags, teams, mandatory, downloadAllowed, oldVersionHolder, releaseNotesMethod, uploadMethod);
+        return new HockeyappApplication(credentialId, notifyTeam, filePath, dsymPath, libsPath, tags, teams, mandatory, downloadAllowed, oldVersionHolder, releaseNotesMethod, uploadMethod);
     }
 }
