@@ -26,6 +26,7 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.RunList;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
@@ -64,6 +65,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -190,13 +192,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     // Not a getter since build has to know proper value
-    public String fetchApiToken(HockeyappApplication application) {
-        // TODO: Get from credentials plugin here?
-        if (application.apiToken == null) {
-            return getDescriptor().getDefaultToken(); // TODO: Don't need this if using credentials plugin as it is all global anyway?
-        } else {
-            return application.apiToken;
-        }
+    public String fetchApiToken(Run<?, ?> build, HockeyappApplication application) {
+        final String credentialId = application.getCredentialId();
+        final String baseUrl = getBaseUrl();
+
+        final StringCredentials stringCredentials = CredentialUtils.getInstance().resolveCredential(build, credentialId, baseUrl);
+
+        return stringCredentials != null ? Secret.toString(stringCredentials.getSecret()) : getDescriptor().getGlobalCredentialId();
     }
 
     public boolean isDebugEnabled() {
@@ -344,7 +346,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                             : new HttpPost(url.toURI());
 
                     FileBody fileBody = new FileBody(file);
-                    httpRequest.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+                    httpRequest.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(build, application)));
                     MultipartEntity entity = new MultipartEntity();
 
                     if (application.releaseNotesMethod != null) {
@@ -486,7 +488,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                             logger.println(Messages.ABORTING_CLEANUP());
                             return this.failGracefully;
                         }
-                        cleanupOldVersions(logger, vars, appId, host, application);
+                        cleanupOldVersions(build, logger, vars, appId, host, application);
                     }
                 }
             }
@@ -685,14 +687,14 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         return actions;
     }
 
-    private void cleanupOldVersions(PrintStream logger, EnvVars vars, String appId, URL host,
+    private void cleanupOldVersions(Run<?, ?> build, PrintStream logger, EnvVars vars, String appId, URL host,
                                     HockeyappApplication application) {
         try {
             String path = "/api/2/apps/" + vars.expand(appId) + "/app_versions/delete";
             URL url = new URL(host, path);
             HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
             HttpPost httpPost = new HttpPost(url.toURI());
-            httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+            httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(build, application)));
             List<NameValuePair> nameValuePairs = new ArrayList<>(1);
             nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
             nameValuePairs.add(new BasicNameValuePair("sort", application.getSortOldVersions()));

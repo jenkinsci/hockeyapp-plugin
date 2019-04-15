@@ -15,6 +15,7 @@ import hockeyapp.HockeyappApplication;
 import hockeyapp.HockeyappRecorder;
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.Run;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
@@ -25,6 +26,7 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,19 @@ public class CredentialUtils {
             }
         }
         return instance;
+    }
+
+    /**
+     * Finds the credential with the given credentialId in the CredentialStore.
+     *
+     * @param run          The Run defining the context within which to find the credential.
+     * @param credentialId The ID of the credential.
+     * @param server       The URL to the server to ensure that we find the credential under the right security domain.
+     * @return The found credential, or null if the credential cannot be found.
+     */
+    @CheckForNull
+    public StringCredentials resolveCredential(@Nonnull final Run<?, ?> run, @CheckForNull final String credentialId, @Nonnull final String server) {
+        return credentialId == null ? null : CredentialsProvider.findCredentialById(credentialId, StringCredentials.class, run, requirements(server));
     }
 
     /**

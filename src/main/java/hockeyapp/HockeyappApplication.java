@@ -26,6 +26,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,6 +114,7 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
         return uploadMethod;
     }
 
+    @CheckForNull
     public String getCredentialId() {
         return credentialId;
     }
