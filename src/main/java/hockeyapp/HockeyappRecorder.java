@@ -861,13 +861,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
         }
 
         @SuppressWarnings("unused")
-        public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
+        public ListBoxModel doFillGlobalCredentialIdItems(@AncestorInPath Item item, @QueryParameter String globalCredentialId) {
             final Jenkins jenkins = Jenkins.getInstance();
             final HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor = jenkins.getDescriptorByType(HockeyappRecorder.DescriptorImpl.class);
             final String defaultBaseUrl = hockeyappRecorderDescriptor.getDefaultBaseUrl();
 
             // Permission checks are implemented in CredentialUtils
-            return CredentialUtils.getInstance().getAvailableCredentials(item, credentialId, defaultBaseUrl);
+            return CredentialUtils.getInstance().getAvailableCredentials(item, globalCredentialId, defaultBaseUrl);
         }
 
         @SuppressWarnings("unused")
