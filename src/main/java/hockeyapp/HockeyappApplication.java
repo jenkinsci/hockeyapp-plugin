@@ -4,7 +4,6 @@ import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractProject;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Item;
@@ -222,12 +221,12 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
 
         @SuppressWarnings("unused")
         public ListBoxModel doFillCredentialIdItems(@AncestorInPath Item item, @QueryParameter String credentialId) {
-            // TODO: See what this does with more than one publisher in the job
-            final HockeyappRecorder describable = ((AbstractProject<?, ?>) item).getPublishersList().get(HockeyappRecorder.class);
-            final String baseUrl = describable.getBaseUrl();
+            final Jenkins jenkins = Jenkins.getInstance();
+            final HockeyappRecorder.DescriptorImpl hockeyappRecorderDescriptor = jenkins.getDescriptorByType(HockeyappRecorder.DescriptorImpl.class);
+            final String defaultBaseUrl = hockeyappRecorderDescriptor.getDefaultBaseUrl();
 
             // Permission checks are implemented in CredentialUtils
-            return CredentialUtils.getInstance().getAvailableCredentials(item, credentialId, baseUrl);
+            return CredentialUtils.getInstance().getAvailableCredentials(item, credentialId, defaultBaseUrl);
         }
 
         @SuppressWarnings("unused")
