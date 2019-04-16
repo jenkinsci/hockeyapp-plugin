@@ -47,12 +47,9 @@ public class CredentialUtils {
 
     public static CredentialUtils getInstance() {
         if (instance == null) {
-            synchronized (CredentialUtils.class) {
-                if (instance == null) {
-                    instance = new CredentialUtils();
-                }
-            }
+            instance = new CredentialUtils();
         }
+
         return instance;
     }
 
