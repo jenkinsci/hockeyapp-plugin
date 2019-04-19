@@ -17,6 +17,7 @@
     <properties>
         <jenkins.version>2.73.3</jenkins.version>
         <java.level>8</java.level>
+        <hpi.compatibleSinceVersion>1.5.0</hpi.compatibleSinceVersion>
     </properties>
 
     <name>HockeyApp Plugin</name>
