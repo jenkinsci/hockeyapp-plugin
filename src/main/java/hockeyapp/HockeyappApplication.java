@@ -7,6 +7,7 @@ import hudson.Util;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.hockeyapp.jenkins.RadioButtonSupport;
 import net.hockeyapp.jenkins.RadioButtonSupportDescriptor;
@@ -32,8 +33,8 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @Deprecated
     public long schemaVersion; // TODO: Fix Findbugs gracefully.
 
-    public String apiToken;
-
+    @Deprecated
+    public transient String apiToken;
     @SuppressFBWarnings(value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"}, justification = "Breaks binary compatibility if removed.")
     @Deprecated
     public String appId; // TODO: Fix Findbugs gracefully.
@@ -48,16 +49,25 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     public OldVersionHolder oldVersionHolder;
     public RadioButtonSupport releaseNotesMethod;
     public RadioButtonSupport uploadMethod;
+    private Secret apiTokenSecret;
 
-    @DataBoundConstructor
+    @Deprecated
     public HockeyappApplication(String apiToken, String appId, boolean notifyTeam,
                                 String filePath, String dsymPath, String libsPath,
                                 String tags, String teams, boolean mandatory,
                                 boolean downloadAllowed, OldVersionHolder oldVersionHolder,
                                 RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
-        this.schemaVersion = SCHEMA_VERSION_NUMBER;
-        this.apiToken = Util.fixEmptyAndTrim(apiToken);
-        this.appId = Util.fixEmptyAndTrim(appId);
+        this(Secret.fromString(apiToken), notifyTeam, filePath, dsymPath, libsPath, tags, teams, mandatory,
+                downloadAllowed, oldVersionHolder, releaseNotesMethod, uploadMethod);
+    }
+
+    @DataBoundConstructor
+    public HockeyappApplication(Secret apiTokenSecret, boolean notifyTeam,
+                                String filePath, String dsymPath, String libsPath,
+                                String tags, String teams, boolean mandatory,
+                                boolean downloadAllowed, OldVersionHolder oldVersionHolder,
+                                RadioButtonSupport releaseNotesMethod, RadioButtonSupport uploadMethod) {
+        this.apiTokenSecret = apiTokenSecret;
         this.notifyTeam = notifyTeam;
         this.filePath = Util.fixEmptyAndTrim(filePath);
         this.dsymPath = Util.fixEmptyAndTrim(dsymPath);
@@ -96,6 +106,23 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
     @Override
     public Descriptor<HockeyappApplication> getDescriptor() {
         return new DescriptorImpl();
+    }
+
+    protected Object readResolve() {
+        if (apiToken != null) {
+            final Secret secret = Secret.fromString(apiToken);
+            setApiTokenSecret(secret);
+        }
+
+        return this;
+    }
+
+    public Secret getApiTokenSecret() {
+        return apiTokenSecret;
+    }
+
+    public void setApiTokenSecret(Secret apiTokenSecret) {
+        this.apiTokenSecret = apiTokenSecret;
     }
 
     public static class OldVersionHolder {
@@ -165,9 +192,9 @@ public class HockeyappApplication implements Describable<HockeyappApplication> {
                         (HockeyappRecorder.DescriptorImpl) activeInstance.getDescriptorOrDie(HockeyappRecorder.class);
 
                 if (hockeyappRecorderDescriptor != null) {
-                    String defaultToken = hockeyappRecorderDescriptor.getDefaultToken();
+                    Secret defaultToken = hockeyappRecorderDescriptor.getDefaultTokenSecret();
 
-                    if (defaultToken != null && defaultToken.length() > 0) {
+                    if (defaultToken != null) {
                         return FormValidation.warning("Default API Token is used.");
                     }
                 }

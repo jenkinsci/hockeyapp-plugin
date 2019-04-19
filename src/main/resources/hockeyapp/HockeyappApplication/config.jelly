@@ -2,8 +2,9 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
          xmlns:f="/lib/form">
 
-    <f:entry title="${%API Token}" field="apiToken">
-        <f:textbox checkUrl="'descriptorByName/hockeyapp.HockeyappApplication/checkApiToken?value='+escape(this.value)"/>
+    <f:entry title="${%API Token}" field="apiTokenSecret">
+        <f:password
+                checkUrl="'descriptorByName/hockeyapp.HockeyappApplication/checkApiToken?value='+escape(this.value)"/>
     </f:entry>
     <f:entry title="${%Upload Method}">
         <table width="100%">
@@ -27,7 +28,8 @@
     </f:entry>
 
     <f:entry title="${%App File} (${%.ipa, .app.zip, .apk})" field="filePath">
-        <f:textbox checkUrl="'descriptorByName/hockeyapp.HockeyappApplication/checkFilePath?value='+escape(this.value)"/>
+        <f:textbox
+                checkUrl="'descriptorByName/hockeyapp.HockeyappApplication/checkFilePath?value='+escape(this.value)"/>
     </f:entry>
     <f:entry title="${%Symbols} (${%.dSYM.zip or mapping.txt})" field="dsymPath">
         <f:textbox/>
@@ -98,7 +100,8 @@
     <f:entry>
         <div align="right">
             <input type="button" value="${%Add an application}..." class="repeatable-add show-if-last"/>
-            <input type="button" value="${%Delete}" class="repeatable-delete show-if-not-only" style="margin-left: 1em;"/>
+            <input type="button" value="${%Delete}" class="repeatable-delete show-if-not-only"
+                   style="margin-left: 1em;"/>
         </div>
     </f:entry>
 </j:jelly>
