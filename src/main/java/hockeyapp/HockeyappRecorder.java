@@ -25,6 +25,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.RunList;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
@@ -179,7 +180,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     }
 
     // Not a getter since build has to know proper value
-    public String fetchApiToken(HockeyappApplication application) {
+    public Secret fetchApiToken(HockeyappApplication application) {
         if (application.apiToken == null) {
             return getDescriptor().getDefaultToken();
         } else {
@@ -331,7 +332,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                             : new HttpPost(url.toURI());
 
                     FileBody fileBody = new FileBody(file);
-                    httpRequest.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+                    final Secret secret = fetchApiToken(application);
+                    httpRequest.setHeader("X-HockeyAppToken", vars.expand(Secret.toString(secret)));
                     MultipartEntity entity = new MultipartEntity();
 
                     if (application.releaseNotesMethod != null) {
@@ -689,7 +691,8 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             URL url = new URL(host, path);
             HttpClient httpclient = createPreconfiguredHttpClient(url, logger);
             HttpPost httpPost = new HttpPost(url.toURI());
-            httpPost.setHeader("X-HockeyAppToken", vars.expand(fetchApiToken(application)));
+            final Secret secret = fetchApiToken(application);
+            httpPost.setHeader("X-HockeyAppToken", vars.expand(Secret.toString(secret)));
             List<NameValuePair> nameValuePairs = new ArrayList<>(1);
             nameValuePairs.add(new BasicNameValuePair("keep", application.getNumberOldVersions()));
             nameValuePairs.add(new BasicNameValuePair("sort", application.getSortOldVersions()));
@@ -751,7 +754,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // point.
     public static final class DescriptorImpl extends
             BuildStepDescriptor<Publisher> {
-        private String defaultToken;
+        private Secret defaultToken;
         private boolean globalDebugMode = false;
         private String timeout;
 
@@ -760,13 +763,13 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             load();
         }
 
-        public String getDefaultToken() {
+        public Secret getDefaultToken() {
             return defaultToken;
         }
 
         @SuppressWarnings("unused") // Used by Jenkins
         public void setDefaultToken(String defaultToken) {
-            this.defaultToken = Util.fixEmptyAndTrim(defaultToken);
+            this.defaultToken = Secret.fromString(defaultToken);
             save();
         }
 
