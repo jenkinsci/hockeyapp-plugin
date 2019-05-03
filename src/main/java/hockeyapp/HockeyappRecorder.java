@@ -25,7 +25,6 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.RunList;
-import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.hockeyapp.jenkins.releaseNotes.FileReleaseNotes;
@@ -181,12 +180,10 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
 
     // Not a getter since build has to know proper value
     public String fetchApiToken(HockeyappApplication application) {
-        final Secret token = application.getApiTokenSecret();
-
-        if (token == null) {
-            return Secret.toString(getDescriptor().getDefaultTokenSecret());
+        if (application.apiToken == null) {
+            return getDescriptor().getDefaultToken();
         } else {
-            return Secret.toString(token);
+            return application.apiToken;
         }
     }
 
@@ -754,9 +751,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
     // point.
     public static final class DescriptorImpl extends
             BuildStepDescriptor<Publisher> {
-        @Deprecated
-        private transient String defaultToken;
-        private Secret defaultTokenSecret;
+        private String defaultToken;
         private boolean globalDebugMode = false;
         private String timeout;
 
@@ -765,33 +760,14 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
             load();
         }
 
-        @Deprecated
         public String getDefaultToken() {
             return defaultToken;
         }
 
-        @Deprecated
         @SuppressWarnings("unused") // Used by Jenkins
         public void setDefaultToken(String defaultToken) {
             this.defaultToken = Util.fixEmptyAndTrim(defaultToken);
             save();
-        }
-
-        public Object readResolve() {
-            if (defaultToken != null) {
-                final Secret secret = Secret.fromString(defaultToken);
-                setDefaultTokenSecret(secret);
-            }
-
-            return this;
-        }
-
-        public Secret getDefaultTokenSecret() {
-            return defaultTokenSecret;
-        }
-
-        public void setDefaultTokenSecret(Secret defaultTokenSecret) {
-            this.defaultTokenSecret = defaultTokenSecret;
         }
 
         public boolean getGlobalDebugMode() {
@@ -883,6 +859,7 @@ public class HockeyappRecorder extends Recorder implements SimpleBuildStep {
                 return FormValidation.ok();
             }
         }
+
     }
 
     private static class EnvAction implements EnvironmentContributingAction {
